@@ -14,7 +14,13 @@ process fastp {
 
   script:
   """
-  fastp -i ${reads_1} -I ${reads_2} -o ${sample_id}_trimmed_R1.fastq.gz -O ${sample_id}_trimmed_R2.fastq.gz
+  fastp \
+    --cut_tail \
+    -i ${reads_1} \
+    -I ${reads_2} \
+    -o ${sample_id}_trimmed_R1.fastq.gz \
+    -O ${sample_id}_trimmed_R2.fastq.gz
+
   mv fastp.json ${sample_id}_fastp.json
   fastp_json_to_csv.py -s ${sample_id} ${sample_id}_fastp.json > ${sample_id}_fastp.csv
   """

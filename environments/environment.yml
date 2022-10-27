@@ -6,6 +6,5 @@ channels:
 dependencies:
   - python=3
   - fastp=0.23.2
-  - tb-profiler=4.1.1
-  - mtb-snp-it=1.1
+  - tb-profiler=4.3.0
   - qualimap=2.2.2d
