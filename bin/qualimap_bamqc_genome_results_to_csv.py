@@ -14,10 +14,10 @@ def main(args):
                 median_insert_size = line.split('=')[1].strip().replace(',', '')
                 output_data['median_insert_size'] = int(median_insert_size)
             if line.startswith('mean coverageData'):
-                mean_coverage = line.split('=')[1].strip().strip('X')
+                mean_coverage = line.split('=')[1].strip().strip('X').replace(',', '')
                 output_data['mean_coverage'] = round(float(mean_coverage), 2)
             if line.startswith('std coverageData'):
-                stdev_coverage = line.split('=')[1].strip().strip('X')
+                stdev_coverage = line.split('=')[1].strip().strip('X').replace(',', '')
                 output_data['stdev_coverage'] = round(float(stdev_coverage), 2)
             if 'reference with a coverageData >= 5X' in line:
                 proportion_genome_covered_over_5x = float(line.split(' ')[3].strip('%')) / 100
