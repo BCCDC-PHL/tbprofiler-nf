@@ -11,9 +11,13 @@ process fastp {
   tuple val(sample_id), path("${sample_id}_fastp.json"), emit: fastp_json
   tuple val(sample_id), path("${sample_id}_fastp.csv"), emit: fastp_csv
   tuple val(sample_id), path("${sample_id}_trimmed_R1.fastq.gz"), path("${sample_id}_trimmed_R2.fastq.gz"), emit: reads
+  tuple val(sample_id), path("${sample_id}_fastp_provenance.yml"), emit: provenance
 
   script:
   """
+  printf -- "- process_name: fastp\\n" > ${sample_id}_fastp_provenance.yml
+  printf -- "  tool_name: fastp\\n  tool_version: \$(fastp --version 2>&1 | cut -d ' ' -f 2)\\n" >> ${sample_id}_fastp_provenance.yml
+
   fastp \
     --cut_tail \
     -i ${reads_1} \
@@ -41,9 +45,11 @@ process tbprofiler {
     tuple val(sample_id), path("${sample_id}_tbprofiler*.{json,csv}"), emit: reports
     tuple val(sample_id), path("${sample_id}_tbprofiler*.{bam,bam.bai}"), emit: alignment
     tuple val(sample_id), path("${sample_id}_tbprofiler*.vcf"), emit: variants
+    tuple val(sample_id), path("${sample_id}_tbprofiler_provenance.yml"), emit: provenance
     
     script:
     """
+
     tb-profiler profile \
       --threads ${task.cpus} \
       --platform ${params.platform} \
@@ -66,6 +72,11 @@ process tbprofiler {
     cp results/${sample_id}.results.json ${sample_id}_tbprofiler_full_report.json
 
     split_tbprofiler_csv.py -p ${sample_id} -s ${sample_id} ${sample_id}_tbprofiler_full_report.csv
+
+    printf -- "- process_name: tb-profiler\\n" > ${sample_id}_tbprofiler_provenance.yml
+    printf -- "  tool_name: tb-profiler\\n  tool_version: \$(tb-profiler profile --version 2>&1 | cut -d ' ' -f 3)\\n" >> ${sample_id}_tbprofiler_provenance.yml
+    printf -- "  database_version: \$(grep 'Database version' ${sample_id}_tbprofiler_full_report.csv | cut -d',' -f2)\\n" >> ${sample_id}_tbprofiler_provenance.yml
+
     """
 }
 
