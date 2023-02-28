@@ -4,15 +4,15 @@ import java.time.LocalDateTime
 
 nextflow.enable.dsl = 2
 
-include { fastp } from './modules/tbprofiler.nf'
-include { tbprofiler } from './modules/tbprofiler.nf'
+include { fastp }                   from './modules/tbprofiler.nf'
+include { tbprofiler }              from './modules/tbprofiler.nf'
 include { rename_ref_in_alignment } from './modules/tbprofiler.nf'
-include { rename_ref_in_variants } from './modules/tbprofiler.nf'
-include { qualimap_bamqc } from './modules/tbprofiler.nf'
-include { pipeline_provenance } from './modules/provenance.nf'
-include { collect_provenance } from './modules/provenance.nf'
+include { rename_ref_in_variants }  from './modules/tbprofiler.nf'
+include { qualimap_bamqc }          from './modules/tbprofiler.nf'
+include { pipeline_provenance }     from './modules/provenance.nf'
+include { collect_provenance }      from './modules/provenance.nf'
 
-// include { snp_it } from './modules/tbprofiler.nf'
+include { snpit }                   from './modules/tbprofiler.nf'
 
 workflow {
 
@@ -30,7 +30,9 @@ workflow {
 
   main:
     fastp(ch_fastq)
+
     tbprofiler(fastp.out.reads)
+
     if (params.rename_ref) {
       rename_ref_in_alignment(tbprofiler.out.alignment)
       rename_ref_in_variants(tbprofiler.out.variants)
@@ -38,7 +40,9 @@ workflow {
     } else {
       qualimap_bamqc(tbprofiler.out.alignment)
     }
-    // snp_it(ch_vcf)
+
+    snpit(rename_ref_in_variants.out)
+
     ch_provenance = fastp.out.provenance
     ch_provenance = ch_provenance.join(tbprofiler.out.provenance).map{ it -> [it[0], [it[1], it[2]]] }
 

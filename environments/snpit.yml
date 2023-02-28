@@ -1,0 +1,12 @@
+name: snpit
+channels:
+  - conda-forge
+  - bioconda
+  - defaults
+dependencies:
+  - python
+  - cython
+  - pip
+  - pysam=0.15.2
+  - pip:
+    - git+https://github.com/philipwfowler/snpit.git
