@@ -156,9 +156,14 @@ process snpit {
 
     output:
     tuple val(sample_id), path("${sample_id}_snpit.tsv")
+    tuple val(sample_id), path("${sample_id}_snpit_provenance.yml"), emit: provenance
     
     script:
     """
     snpit --input ${vcf} > ${sample_id}_snpit.tsv
+
+    printf -- "- process_name: snpit\\n" > ${sample_id}_snpit_provenance.yml
+    printf -- "  tool_name: snpit\\n" >> ${sample_id}_snpit_provenance.yml
+    printf -- "  tool_version: \$(snpit --version 2>&1)\\n" >> ${sample_id}_snpit_provenance.yml
     """
 }
