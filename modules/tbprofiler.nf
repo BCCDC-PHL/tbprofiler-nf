@@ -69,7 +69,7 @@ process tbprofiler {
     mv bam/${sample_id}.bam.bai ./${sample_id}_tbprofiler.bam.bai
 
     mv vcf/${sample_id}.targets.csq.vcf.gz ./${sample_id}_tbprofiler_targets.vcf.gz
-    gunzip ./${sample_id}_tbprofiler_targetsvcf.gz
+    gunzip ./${sample_id}_tbprofiler_targets.vcf.gz
 
     mv vcf/${sample_id}.vcf.gz ./${sample_id}_tbprofiler_whole_genome.vcf.gz
     gunzip ./${sample_id}_tbprofiler_whole_genome.vcf.gz
