@@ -7,7 +7,8 @@ nextflow.enable.dsl = 2
 include { fastp }                   from './modules/tbprofiler.nf'
 include { tbprofiler }              from './modules/tbprofiler.nf'
 include { rename_ref_in_alignment } from './modules/tbprofiler.nf'
-include { rename_ref_in_variants }  from './modules/tbprofiler.nf'
+include { rename_ref_in_variants as rename_ref_in_targets_variants }       from './modules/tbprofiler.nf'
+include { rename_ref_in_variants as rename_ref_in_whole_genome_variants }  from './modules/tbprofiler.nf'
 include { qualimap_bamqc }          from './modules/tbprofiler.nf'
 include { pipeline_provenance }     from './modules/provenance.nf'
 include { collect_provenance }      from './modules/provenance.nf'
@@ -35,13 +36,18 @@ workflow {
 
     if (params.rename_ref) {
       rename_ref_in_alignment(tbprofiler.out.alignment)
-      rename_ref_in_variants(tbprofiler.out.variants)
+      rename_ref_in_targets_variants(tbprofiler.out.targets_vcf)
+      rename_ref_in_whole_genome_variants(tbprofiler.out.whole_genome_vcf)
       qualimap_bamqc(rename_ref_in_alignment.out)
     } else {
       qualimap_bamqc(tbprofiler.out.alignment)
     }
 
-    snpit(rename_ref_in_variants.out)
+    if (params.rename_ref) {
+      snpit(rename_ref_in_whole_genome_variants.out)
+    } else {
+      snpit(tbprofiler.out.whole_genome_vcf)
+    }
 
     ch_provenance = fastp.out.provenance
     ch_provenance = ch_provenance.join(tbprofiler.out.provenance).map{ it -> [it[0], [it[1], it[2]]] }

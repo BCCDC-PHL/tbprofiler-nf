@@ -44,7 +44,8 @@ process tbprofiler {
     output:
     tuple val(sample_id), path("${sample_id}_tbprofiler*.{json,csv}"), emit: reports
     tuple val(sample_id), path("${sample_id}_tbprofiler*.{bam,bam.bai}"), emit: alignment
-    tuple val(sample_id), path("${sample_id}_tbprofiler*.vcf"), emit: variants
+    tuple val(sample_id), path("${sample_id}_tbprofiler_targets.vcf"), emit: targets_vcf
+    tuple val(sample_id), path("${sample_id}_tbprofiler_whole_genome.vcf"), emit: whole_genome_vcf
     tuple val(sample_id), path("${sample_id}_tbprofiler_provenance.yml"), emit: provenance
     
     script:
@@ -61,13 +62,18 @@ process tbprofiler {
       --read1 ${reads_1} \
       --read2 ${reads_2} \
       --prefix ${sample_id} \
-      --csv
+      --csv \
+      --call_whole_genome
 
     mv bam/${sample_id}.bam ./${sample_id}_tbprofiler.bam
     mv bam/${sample_id}.bam.bai ./${sample_id}_tbprofiler.bam.bai
 
-    mv vcf/${sample_id}.targets.csq.vcf.gz ./${sample_id}_tbprofiler.vcf.gz
-    gunzip ./${sample_id}_tbprofiler.vcf.gz
+    mv vcf/${sample_id}.targets.csq.vcf.gz ./${sample_id}_tbprofiler_targets.vcf.gz
+    gunzip ./${sample_id}_tbprofiler_targetsvcf.gz
+
+    mv vcf/${sample_id}.vcf.gz ./${sample_id}_tbprofiler_whole_genome.vcf.gz
+    gunzip ./${sample_id}_tbprofiler_whole_genome.vcf.gz
+
     cp results/${sample_id}.results.csv ${sample_id}_tbprofiler_full_report.csv
     cp results/${sample_id}.results.json ${sample_id}_tbprofiler_full_report.json
 
