@@ -4,15 +4,16 @@ import java.time.LocalDateTime
 
 nextflow.enable.dsl = 2
 
-include { fastp } from './modules/tbprofiler.nf'
-include { tbprofiler } from './modules/tbprofiler.nf'
+include { fastp }                   from './modules/tbprofiler.nf'
+include { tbprofiler }              from './modules/tbprofiler.nf'
 include { rename_ref_in_alignment } from './modules/tbprofiler.nf'
-include { rename_ref_in_variants } from './modules/tbprofiler.nf'
-include { qualimap_bamqc } from './modules/tbprofiler.nf'
-include { pipeline_provenance } from './modules/provenance.nf'
-include { collect_provenance } from './modules/provenance.nf'
+include { rename_ref_in_variants as rename_ref_in_targets_variants }       from './modules/tbprofiler.nf'
+include { rename_ref_in_variants as rename_ref_in_whole_genome_variants }  from './modules/tbprofiler.nf'
+include { qualimap_bamqc }          from './modules/tbprofiler.nf'
+include { pipeline_provenance }     from './modules/provenance.nf'
+include { collect_provenance }      from './modules/provenance.nf'
 
-// include { snp_it } from './modules/tbprofiler.nf'
+include { snpit }                   from './modules/tbprofiler.nf'
 
 workflow {
 
@@ -30,17 +31,27 @@ workflow {
 
   main:
     fastp(ch_fastq)
+
     tbprofiler(fastp.out.reads)
+
     if (params.rename_ref) {
       rename_ref_in_alignment(tbprofiler.out.alignment)
-      rename_ref_in_variants(tbprofiler.out.variants)
+      rename_ref_in_targets_variants(tbprofiler.out.targets_vcf)
+      rename_ref_in_whole_genome_variants(tbprofiler.out.whole_genome_vcf)
       qualimap_bamqc(rename_ref_in_alignment.out)
     } else {
       qualimap_bamqc(tbprofiler.out.alignment)
     }
-    // snp_it(ch_vcf)
+
+    if (params.rename_ref) {
+      snpit(rename_ref_in_whole_genome_variants.out)
+    } else {
+      snpit(tbprofiler.out.whole_genome_vcf)
+    }
+
     ch_provenance = fastp.out.provenance
     ch_provenance = ch_provenance.join(tbprofiler.out.provenance).map{ it -> [it[0], [it[1], it[2]]] }
+    ch_provenance = ch_provenance.join(snpit.out.provenance).map{ it -> [it[0], it[1] << it[2]] }
 
     ch_provenance = ch_provenance.join(ch_fastq.map{ it -> it[0] }.combine(ch_pipeline_provenance)).map{ it -> [it[0], it[1] ] }
 
