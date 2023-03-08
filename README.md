@@ -39,11 +39,11 @@ The following files will be produced for each sample:
 ```
 .
 └── sample-01
-	├── sample-01_TIMESTAMP_provenance.yml
+    ├── sample-01_TIMESTAMP_provenance.yml
     ├── sample-01_fastp.csv
     ├── sample-01_fastp.json
     ├── sample-01_qualimap_alignment_qc.csv
-	├── sample-01_snpit.tsv
+    ├── sample-01_snpit.tsv
     ├── sample-01_tbprofiler.bam
     ├── sample-01_tbprofiler.bam.bai
     ├── sample-01_tbprofiler_full_report.csv
@@ -51,6 +51,6 @@ The following files will be produced for each sample:
     ├── sample-01_tbprofiler_lineage.csv
     ├── sample-01_tbprofiler_resistance.csv
     ├── sample-01_tbprofiler_summary.csv
-	├── sample-01_tbprofiler_targets.vcf
+    ├── sample-01_tbprofiler_targets.vcf
     └── sample-01_tbprofiler_whole_genome.vcf
 ```
