@@ -158,6 +158,14 @@ def parse_resistance_report(path, sample_id):
     
 
 def create_two_resistance_tables(resistance_report):
+
+   """
+    Take the resistance report and create two tables with the desired headers - one to report resistance and one to report mutations.
+
+
+    :return: Two lists that report drug resistance and predicted drug mutations.
+    :rtype: list
+    """
   
    resistance_table = []
    mutation_table = []
