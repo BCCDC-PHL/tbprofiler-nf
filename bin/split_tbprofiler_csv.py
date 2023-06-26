@@ -112,13 +112,28 @@ def parse_section(path, header):
     section_fields = [x.lower().replace(' ', '_') for x in section_lines[0].split(',')]
 
     parsed_section_records = []
-    for line in section_lines[1:]:
-        record = {}
-        for idx, field in enumerate(section_fields):
-            record[field] = re.split(',', line)[idx].replace('"', '')
-        parsed_section_records.append(record)
+    
+    
+    if header == "Resistance report":
+        for line in section_lines[1:]:
+            record = {}
+
+            line_list = re.split(',', line)
+            record['drug'] =line_list[0]
+            record['genotypic_resistance'] = line_list[1]
+            record['mutations'] = line_list[2:]
+            
+            parsed_section_records.append(record)
+            
+    
 
     if header == "Lineage report":
+        for line in section_lines[1:]:
+            record = {}
+            for idx, field in enumerate(section_fields):
+                record[field] = re.split(',', line)[idx].replace('"', '')
+            parsed_section_records.append(record)
+    
         for record in parsed_section_records:
             if record['lineage'].startswith('lineage'):
                 record['lineage'] = record['lineage'].replace('lineage', '')
@@ -139,6 +154,52 @@ def parse_resistance_report(path, sample_id):
         r['sample_id'] = sample_id
     resistance_fields = ['sample_id'] + resistance_fields
     return resistance_fields, parsed_resistance
+    
+    
+
+def create_two_resistance_tables(resistance_report):
+  
+   resistance_table = []
+   mutation_table = []
+
+   for row in resistance_report:
+   
+       resistance_table_row = {}
+       resistance_table_row['drug'] = row['drug']
+       resistance_table_row['genotypic_resistance'] = row['genotypic_resistance']
+       resistance_table_row['sample_id'] = row['sample_id']
+       
+       resistance_table.append(resistance_table_row)
+       
+       
+       for mutation in row['mutations']:
+           mutation_table_row = {}
+           
+           
+           mutation_table_row['drug'] = row['drug']
+           mutation_table_row['sample_id'] = row['sample_id']
+           
+           
+           mutation = mutation.strip()
+
+           mutation = mutation.split(' ')
+
+           mutation_table_row['gene'] = mutation[0]
+           mutation_detail = ' '.join(mutation[1:-1])
+           mutation_table_row['mutation'] = mutation_detail
+           
+           estimated_fraction = mutation[-1].strip('(').strip(')')
+           mutation_table_row['estimated_fraction'] = estimated_fraction
+
+                     
+           mutation_table.append(mutation_table_row)
+           
+           
+       
+   
+   return resistance_table, mutation_table
+
+
 
 
 def main(args):
@@ -146,6 +207,8 @@ def main(args):
     (summary_fields, summary) = parse_summary(args.tbprofiler_csv)
     (lineage_fields, lineage_report) = parse_lineage_report(args.tbprofiler_csv, args.sample_id)
     (resistance_fields, resistance_report) = parse_resistance_report(args.tbprofiler_csv, args.sample_id)
+    
+    (resistance_table, mutation_table) = create_two_resistance_tables(resistance_report)
     
 
     with open(args.prefix + '_tbprofiler_summary.csv', 'w', newline=os.linesep) as f:
@@ -160,11 +223,24 @@ def main(args):
         for row in lineage_report:
             writer.writerow(row)
 
+                        
+    resistance_fields = ['sample_id', 'drug', 'genotypic_resistance']
+    mutation_fields = ['sample_id','drug' , 'gene','mutation', 'estimated_fraction']       
+    
+
     with open(args.prefix + '_tbprofiler_resistance.csv', 'w', newline=os.linesep) as f:
         writer = csv.DictWriter(f, fieldnames=resistance_fields)
         writer.writeheader()
-        for row in resistance_report:
+        for row in resistance_table:
             writer.writerow(row)
+            
+    with open(args.prefix + '_tbprofiler_resistance_mutations.csv', 'w', newline=os.linesep) as f:
+        writer = csv.DictWriter(f, fieldnames=mutation_fields)
+        writer.writeheader()
+        for row in mutation_table:
+            writer.writerow(row)
+  
+
     
 
 if __name__ == '__main__':
