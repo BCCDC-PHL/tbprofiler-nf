@@ -58,6 +58,8 @@ def parse_resistance_report(tbprofiler_csv_path: Path):
 
     :param tbprofiler_csv_path:
     :type tbprofiler_csv_path: pathlib.Path
+    :return: Parsed resistance report. Keys: ['drug', 'genotypic_resistance', 'mutations'].
+    :rtype: list[dict]
     """
     resistance = []
     with open(tbprofiler_csv_path, 'r') as f:
