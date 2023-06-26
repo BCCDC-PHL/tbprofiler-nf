@@ -210,7 +210,7 @@ def create_two_resistance_tables(resistance_report):
     """
     Take the resistance report and create two tables with the desired headers - one to report resistance and one to report mutations.
 
-    :param resistance_report: list[dict]
+    :param resistance_report: tbprofiler full report resistance rows
     :type resistance_report: list[dict]
     :return: Two lists that report drug resistance and predicted drug mutations.
              Keys for resistance table: ['sample_id', 'drug', 'genotypic_resistance']
