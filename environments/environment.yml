@@ -8,3 +8,7 @@ dependencies:
   - fastp=0.23.2
   - tb-profiler=4.3.0
   - qualimap=2.2.2d
+  - pip=23.2.1
+  - bamtocov=2.7.0
+  - pip:
+    - bam2plot==0.1.9
