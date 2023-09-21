@@ -15,6 +15,8 @@ include { collect_provenance }      from './modules/provenance.nf'
 
 include { snpit }                   from './modules/tbprofiler.nf'
 
+include { coverage }                from './modules/tbprofiler.nf'
+
 workflow {
 
   ch_start_time = Channel.of(LocalDateTime.now())
@@ -48,7 +50,8 @@ workflow {
     } else {
       snpit(tbprofiler.out.whole_genome_vcf)
     }
-
+    
+    ch_coverage(tbprofiler.out.alignment)
     ch_provenance = fastp.out.provenance
     ch_provenance = ch_provenance.join(tbprofiler.out.provenance).map{ it -> [it[0], [it[1], it[2]]] }
     ch_provenance = ch_provenance.join(snpit.out.provenance).map{ it -> [it[0], it[1] << it[2]] }

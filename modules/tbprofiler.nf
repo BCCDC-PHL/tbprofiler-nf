@@ -167,3 +167,28 @@ process snpit {
     printf -- "  tool_version: \$(snpit --version 2>&1)\\n" >> ${sample_id}_snpit_provenance.yml
     """
 }
+
+process coverage {
+
+    tag { sample_id }
+
+    publishDir params.versioned_outdir ? "${params.outdir}/${sample_id}/${params.pipeline_short_name}-v${params.pipeline_minor_version}-output" : "${params.outdir}/${sample_id}", mode: 'copy', pattern: "${sample_id}_tbprofiler_bam2plot_Chromosome.png"
+    publishDir params.versioned_outdir ? "${params.outdir}/${sample_id}/${params.pipeline_short_name}-v${params.pipeline_minor_version}-output" : "${params.outdir}/${sample_id}", mode: 'copy', pattern: "${sample_id}_filtered_low_coverage.bed"
+
+    input:
+    tuple val(sample_id), file(alignment)
+
+    output:
+    tuple val(sample_id), path("${sample_id}_tbprofiler_bam2plot_Chromosome.png") emit: coverage_plot
+    tuple val(sample_id), path("${sample_id}_filtered_low_coverage.bed") emit: low_coverage_bed
+
+    script:
+    """
+    bam2plot --bam ${alignment[0]} --sample_name ${sample_id} --outpath . --rolling_window 10 --threshold ${params.min_depth}
+    bamtocov ${alignment[0]}  -p -o  ${sample_id}_bamtocov_coverage_report.txt --report-low ${params.min_depth}  > ${sample_id}_coverage.bed 
+    awk -v threshold=${params.min_depth} '$4 < threshold' ${sample_id}_coverage.bed > ${sample_id}_filtered_low_coverage.bed
+
+    """
+
+
+}
