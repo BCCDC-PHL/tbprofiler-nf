@@ -5,7 +5,7 @@ import csv
 import sys
 
 def main(args):
-    bed = []
+    writer = csv.DictWriter(sys.stdout, fieldnames=['chrom', 'start', 'end'], delimiter='\t')
     current_bed_record = None
     with open(args.input, 'r') as f:
         header = f.readline()
@@ -19,18 +19,13 @@ def main(args):
                     current_bed_record = {
                         'chrom': chrom,
                         'start': pos,
-                        'end': pos,
                     }
             else:
                 if current_bed_record is not None:
                     current_bed_record['end'] = pos
-                    bed.append(current_bed_record)
+                    writer.writerow(current_bed_record)
                     current_bed_record = None
 
-    writer = csv.DictWriter(sys.stdout, fieldnames=['chrom', 'start', 'end'], delimiter='\t')
-
-    for record in bed:
-        writer.writerow(record)
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Summarize depth of coverage')

@@ -182,8 +182,14 @@ process mpileup {
     script:
     """
     samtools faidx ${ref}
+
     printf "chrom\tpos\tref\tdepth\n" > ${sample_id}_depths.tsv
-    samtools mpileup -a --fasta-ref ${ref} ${alignment[0]} | cut -f 1-4 >> ${sample_id}_depths.tsv
+
+    samtools mpileup -a \
+      --fasta-ref ${ref} \
+      --min-BQ 0 \
+      --count-orphans \
+      ${alignment[0]} | cut -f 1-4 >> ${sample_id}_depths.tsv
     """
 }
 
@@ -225,14 +231,14 @@ process generate_low_coverage_bed {
     tuple val(sample_id), path(depths)
 
     output:
-    tuple val(sample_id), path("${sample_id}_coverage_plot.png")
+    tuple val(sample_id), path("${sample_id}_low_coverage_regions.bed")
 
     script:
     """
     generate_low_coverage_bed.py \
       --input ${depths} \
       --threshold ${params.min_depth} \
-      > ${sample_id}_low_coverage.bed
+      > ${sample_id}_low_coverage_regions.bed
     """
 }
 
