@@ -167,3 +167,22 @@ process snpit {
     printf -- "  tool_version: \$(snpit --version 2>&1)\\n" >> ${sample_id}_snpit_provenance.yml
     """
 }
+
+
+process mpileup {
+
+    tag { sample_id }
+
+    input:
+    tuple val(sample_id), path(alignment), path(ref)
+
+    output:
+    tuple val(sample_id), path("${sample_id}_depths.tsv")
+
+    script:
+    """
+    samtools faidx ${ref}
+    printf "chrom\tpos\tref\tdepth\n" > ${sample_id}_depths.tsv
+    samtools mpileup -a --fasta-ref ${ref} ${alignment[0]} | cut -f 1-4 >> ${sample_id}_depths.tsv
+    """
+}

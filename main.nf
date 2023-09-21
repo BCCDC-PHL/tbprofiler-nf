@@ -10,6 +10,7 @@ include { rename_ref_in_alignment } from './modules/tbprofiler.nf'
 include { rename_ref_in_variants as rename_ref_in_targets_variants }       from './modules/tbprofiler.nf'
 include { rename_ref_in_variants as rename_ref_in_whole_genome_variants }  from './modules/tbprofiler.nf'
 include { qualimap_bamqc }          from './modules/tbprofiler.nf'
+include { mpileup }                 from './modules/tbprofiler.nf'
 include { pipeline_provenance }     from './modules/provenance.nf'
 include { collect_provenance }      from './modules/provenance.nf'
 
@@ -35,19 +36,23 @@ workflow {
     tbprofiler(fastp.out.reads)
 
     if (params.rename_ref) {
+      ch_ref = Channel.fromPath("${baseDir}/assets/NC_000962.3.fa")
       rename_ref_in_alignment(tbprofiler.out.alignment)
       rename_ref_in_targets_variants(tbprofiler.out.targets_vcf)
       rename_ref_in_whole_genome_variants(tbprofiler.out.whole_genome_vcf)
-      qualimap_bamqc(rename_ref_in_alignment.out)
+      ch_alignment = rename_ref_in_alignment.out
+      ch_whole_genome_variants = rename_ref_in_whole_genome_variants.out
     } else {
-      qualimap_bamqc(tbprofiler.out.alignment)
+      ch_ref = Channel.fromPath("${baseDir}/assets/tbdb_genome.fa")
+      ch_alignment = tbprofiler.out.alignment
+      ch_whole_genome_variants = tbprofiler.out.whole_genome_vcf
     }
 
-    if (params.rename_ref) {
-      snpit(rename_ref_in_whole_genome_variants.out)
-    } else {
-      snpit(tbprofiler.out.whole_genome_vcf)
-    }
+    qualimap_bamqc(ch_alignment)
+
+    mpileup(ch_alignment.combine(ch_ref))
+
+    snpit(ch_whole_genome_variants)
 
     ch_provenance = fastp.out.provenance
     ch_provenance = ch_provenance.join(tbprofiler.out.provenance).map{ it -> [it[0], [it[1], it[2]]] }
