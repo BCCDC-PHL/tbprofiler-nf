@@ -10,5 +10,6 @@ dependencies:
   - qualimap=2.2.2d
   - pip=23.2.1
   - bamtocov=2.7.0
+  - perbase=0.9.0
   - pip:
     - bam2plot==0.1.9
