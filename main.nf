@@ -4,17 +4,20 @@ import java.time.LocalDateTime
 
 nextflow.enable.dsl = 2
 
-include { fastp }                   from './modules/tbprofiler.nf'
-include { tbprofiler }              from './modules/tbprofiler.nf'
-include { rename_ref_in_alignment } from './modules/tbprofiler.nf'
+include { fastp }                     from './modules/tbprofiler.nf'
+include { tbprofiler }                from './modules/tbprofiler.nf'
+include { snpit }                     from './modules/tbprofiler.nf'
+include { rename_ref_in_alignment }   from './modules/tbprofiler.nf'
 include { rename_ref_in_variants as rename_ref_in_targets_variants }       from './modules/tbprofiler.nf'
 include { rename_ref_in_variants as rename_ref_in_whole_genome_variants }  from './modules/tbprofiler.nf'
-include { qualimap_bamqc }          from './modules/tbprofiler.nf'
-include { mpileup }                 from './modules/tbprofiler.nf'
-include { pipeline_provenance }     from './modules/provenance.nf'
-include { collect_provenance }      from './modules/provenance.nf'
+include { qualimap_bamqc }            from './modules/tbprofiler.nf'
+include { mpileup }                   from './modules/tbprofiler.nf'
+include { plot_coverage }             from './modules/tbprofiler.nf'
+include { generate_low_coverage_bed } from './modules/tbprofiler.nf'
+include { pipeline_provenance }       from './modules/provenance.nf'
+include { collect_provenance }        from './modules/provenance.nf'
 
-include { snpit }                   from './modules/tbprofiler.nf'
+
 
 workflow {
 
@@ -48,11 +51,15 @@ workflow {
       ch_whole_genome_variants = tbprofiler.out.whole_genome_vcf
     }
 
+    snpit(ch_whole_genome_variants)
+
     qualimap_bamqc(ch_alignment)
 
-    mpileup(ch_alignment.combine(ch_ref))
+    ch_depths = mpileup(ch_alignment.combine(ch_ref))
 
-    snpit(ch_whole_genome_variants)
+    plot_coverage(ch_depths)
+
+    generate_low_coverage_bed(ch_depths)
 
     ch_provenance = fastp.out.provenance
     ch_provenance = ch_provenance.join(tbprofiler.out.provenance).map{ it -> [it[0], [it[1], it[2]]] }

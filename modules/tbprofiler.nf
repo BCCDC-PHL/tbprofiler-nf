@@ -186,3 +186,53 @@ process mpileup {
     samtools mpileup -a --fasta-ref ${ref} ${alignment[0]} | cut -f 1-4 >> ${sample_id}_depths.tsv
     """
 }
+
+
+process plot_coverage {
+
+    tag { sample_id }
+
+    conda "$baseDir/environments/seaborn.yml"
+
+    publishDir params.versioned_outdir ? "${params.outdir}/${sample_id}/${params.pipeline_short_name}-v${params.pipeline_minor_version}-output" : "${params.outdir}/${sample_id}", mode: 'copy', pattern: "${sample_id}_coverage_plot.png"
+
+    input:
+    tuple val(sample_id), path(depths)
+
+    output:
+    tuple val(sample_id), path("${sample_id}_coverage_plot.png")
+
+    script:
+    """
+    plot_coverage.py \
+      --input ${depths} \
+      --sample-id ${sample_id} \
+      --threshold ${params.min_depth} \
+      --log-scale \
+      --rolling-window 100 \
+      --y-limit 500
+    """
+}
+
+
+process generate_low_coverage_bed {
+
+    tag { sample_id }
+
+    publishDir params.versioned_outdir ? "${params.outdir}/${sample_id}/${params.pipeline_short_name}-v${params.pipeline_minor_version}-output" : "${params.outdir}/${sample_id}", mode: 'copy', pattern: "${sample_id}_low_coverage_regions.bed"
+
+    input:
+    tuple val(sample_id), path(depths)
+
+    output:
+    tuple val(sample_id), path("${sample_id}_coverage_plot.png")
+
+    script:
+    """
+    generate_low_coverage_bed.py \
+      --input ${depths} \
+      --threshold ${params.min_depth} \
+      > ${sample_id}_low_coverage.bed
+    """
+}
+
