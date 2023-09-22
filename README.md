@@ -11,6 +11,9 @@ flowchart TD
   fastp -- trimmed_reads --> tbprofiler
   tbprofiler -- vcf --> snpit
   tbprofiler -- bam --> qualimap_bamqc
+  tbprofiler -- bam --> mpileup
+  mpileup -- depths --> plot_coverage
+  mpileup -- depths --> generate_low_coverage_bed
 ```
 
 ## Usage
@@ -40,8 +43,10 @@ The following files will be produced for each sample:
 .
 └── sample-01
     ├── sample-01_TIMESTAMP_provenance.yml
+    ├── sample-01_coverage_plot.png
     ├── sample-01_fastp.csv
     ├── sample-01_fastp.json
+    ├── sample-01_low_coverage_regions.bed
     ├── sample-01_qualimap_alignment_qc.csv
     ├── sample-01_snpit.tsv
     ├── sample-01_tbprofiler.bam
@@ -50,6 +55,7 @@ The following files will be produced for each sample:
     ├── sample-01_tbprofiler_full_report.json
     ├── sample-01_tbprofiler_lineage.csv
     ├── sample-01_tbprofiler_resistance.csv
+    ├── sample-01_tbprofiler_resistance_mutations.csv
     ├── sample-01_tbprofiler_summary.csv
     ├── sample-01_tbprofiler_targets.vcf
     └── sample-01_tbprofiler_whole_genome.vcf
