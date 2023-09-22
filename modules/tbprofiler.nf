@@ -248,3 +248,26 @@ process generate_low_coverage_bed {
     """
 }
 
+
+process calculate_gene_coverage {
+
+    tag { sample_id }
+
+    publishDir params.versioned_outdir ? "${params.outdir}/${sample_id}/${params.pipeline_short_name}-v${params.pipeline_minor_version}-output" : "${params.outdir}/${sample_id}", mode: 'copy', pattern: "${sample_id}_resistance_gene_coverage.csv"
+
+    input:
+    tuple val(sample_id), path(depths), path(resistance_genes_bed)
+
+    output:
+    tuple val(sample_id), path("${sample_id}_resistance_gene_coverage.csv")
+
+    script:
+    """
+    calculate_res_gene_depth_qc.py \
+      --bed ${resistance_genes_bed}
+      --depth ${depths} \
+      --threshold ${params.min_depth} \
+      --output ${sample_id}_resistance_gene_coverage.csv
+    """
+}
+
