@@ -33,6 +33,8 @@ workflow {
     ch_fastq = Channel.fromFilePairs( params.fastq_search_path, flat: true ).map{ it -> [it[0].split('_')[0], it[1], it[2]] }.unique{ it -> it[0] }
   }
 
+  ch_resistance_genes_bed = Channel.fromPath("${baseDir}/assets/resistance_genes.bed")
+
   main:
     fastp(ch_fastq)
 
@@ -57,7 +59,7 @@ workflow {
 
     ch_depths = mpileup(ch_alignment.combine(ch_ref))
 
-    plot_coverage(ch_depths)
+    plot_coverage(ch_depths.combine(ch_resistance_genes_bed))
 
     generate_low_coverage_bed(ch_depths)
 

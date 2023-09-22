@@ -203,20 +203,26 @@ process plot_coverage {
     publishDir params.versioned_outdir ? "${params.outdir}/${sample_id}/${params.pipeline_short_name}-v${params.pipeline_minor_version}-output" : "${params.outdir}/${sample_id}", mode: 'copy', pattern: "${sample_id}_coverage_plot.png"
 
     input:
-    tuple val(sample_id), path(depths)
+    tuple val(sample_id), path(depths), path(resistance_genes_bed)
 
     output:
     tuple val(sample_id), path("${sample_id}_coverage_plot.png")
 
     script:
     """
+    if [ ${params.rename_ref} == "true" ]; then
+      sed s/'Chromosome'/'${params.ref_name}'/ ${resistance_genes_bed} > genes.bed
+    else
+      cp ${resistance_genes_bed} genes.bed
+    fi
     plot_coverage.py \
       --input ${depths} \
       --sample-id ${sample_id} \
       --threshold ${params.min_depth} \
       --log-scale \
       --rolling-window 100 \
-      --y-limit 500
+      --y-limit 500 \
+      --genes genes.bed
     """
 }
 
