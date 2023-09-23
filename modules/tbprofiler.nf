@@ -264,7 +264,7 @@ process calculate_gene_coverage {
     script:
     """
     calculate_res_gene_depth_qc.py \
-      --bed ${resistance_genes_bed}
+      --bed ${resistance_genes_bed} \
       --depth ${depths} \
       --threshold ${params.min_depth} \
       --output ${sample_id}_resistance_gene_coverage.csv
