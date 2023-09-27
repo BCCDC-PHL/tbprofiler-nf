@@ -14,6 +14,7 @@ include { qualimap_bamqc }            from './modules/tbprofiler.nf'
 include { mpileup }                   from './modules/tbprofiler.nf'
 include { plot_coverage }             from './modules/tbprofiler.nf'
 include { generate_low_coverage_bed } from './modules/tbprofiler.nf'
+include { calculate_gene_coverage }   from './modules/tbprofiler.nf'
 include { pipeline_provenance }       from './modules/provenance.nf'
 include { collect_provenance }        from './modules/provenance.nf'
 
@@ -62,6 +63,8 @@ workflow {
     plot_coverage(ch_depths.combine(ch_resistance_genes_bed))
 
     generate_low_coverage_bed(ch_depths)
+    
+    calculate_gene_coverage(ch_depths.combine(ch_resistance_genes_bed))
 
     ch_provenance = fastp.out.provenance
     ch_provenance = ch_provenance.join(tbprofiler.out.provenance).map{ it -> [it[0], [it[1], it[2]]] }
