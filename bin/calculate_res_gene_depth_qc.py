@@ -1,5 +1,3 @@
-#!/usr/bin/env python
-
 import csv
 import argparse
 
@@ -12,8 +10,9 @@ def calculate_mean_depth(gene_positions, depth):
         if position in depth:
             total_depth += depth[position]
             total_positions += 1
-
-    return total_depth / total_positions
+    
+    mean_depth = total_depth / total_positions
+    return round(mean_depth, 3)
 
 # calculate percent of gene above depth threshold
 def calculate_percent_gene_covered(gene_positions, depth, depth_threshold):
@@ -26,8 +25,8 @@ def calculate_percent_gene_covered(gene_positions, depth, depth_threshold):
     total_positions = gene_positions[1] - gene_positions[0] + 1
 
 
-    return (covered_positions / total_positions) * 100
-
+    pct_cov = (covered_positions / total_positions) * 100
+    return round(pct_cov, 3)
 
 def main():
     parser = argparse.ArgumentParser(description='Calculate resistance gene coverage qc metrics.')
