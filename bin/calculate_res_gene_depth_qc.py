@@ -28,14 +28,7 @@ def calculate_percent_gene_covered(gene_positions, depth, depth_threshold):
     pct_cov = (covered_positions / total_positions) * 100
     return round(pct_cov, 3)
 
-def main():
-    parser = argparse.ArgumentParser(description='Calculate resistance gene coverage qc metrics.')
-    parser.add_argument('--bed', required=True, help='Path for resistance genes bed file.')
-    parser.add_argument('--depth', required=True, help='Path for tsv file with depth for each position (intermediate mpileup output).')
-    parser.add_argument('--threshold', type=float, default=10, help='min_depth threshold (default: 10).')
-    parser.add_argument('--output',  help='Output CSV file name.')
-    args = parser.parse_args()
-
+def main(args):
     # Read gene positions from the resistance genes bed file
     gene_data = []
     with open(args.bed, 'r') as bed_file:
@@ -79,4 +72,10 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    parser = argparse.ArgumentParser(description='Calculate resistance gene coverage qc metrics.')
+    parser.add_argument('--bed', required=True, help='Path for resistance genes bed file.')
+    parser.add_argument('--depth', required=True, help='Path for tsv file with depth for each position (intermediate mpileup output).')
+    parser.add_argument('--threshold', type=float, default=10, help='min_depth threshold (default: 10).')
+    parser.add_argument('--output',  help='Output CSV file name.')
+    args = parser.parse_args()
+    main(args)
