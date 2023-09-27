@@ -1,3 +1,5 @@
+#!/usr/bin/env python3
+
 import csv
 import argparse
 
@@ -35,8 +37,8 @@ def main(args):
         for line in bed_file:
             fields = line.strip().split()
             gene_name = fields[3]
-            start_position = int(fields[1])
-            end_position = int(fields[2])
+            start_position = int(fields[1]) +1 # add +1 because bed file is 0 indexed and depth file is 1 indexed
+            end_position = int(fields[2]) 
             gene_data.append((gene_name, (start_position, end_position)))
 
     # Read depth data from intermediate mpileup tsv file
