@@ -12,8 +12,12 @@ def calculate_mean_depth(gene_positions, depth):
         if position in depth:
             total_depth += depth[position]
             total_positions += 1
-    
-    mean_depth = total_depth / total_positions
+    if total_positions != 0:
+        mean_depth = total_depth / total_positions
+
+    else:
+        mean_depth = 0
+
     return round(mean_depth, 3)
 
 # calculate percent of gene above depth threshold
@@ -23,11 +27,15 @@ def calculate_percent_gene_covered(gene_positions, depth, depth_threshold):
     for position in range(gene_positions[0], gene_positions[1] + 1):
         if position in depth and depth[position] >= depth_threshold:
             covered_positions += 1
-
+    
     total_positions = gene_positions[1] - gene_positions[0] + 1
 
+    
+    if total_positions != 0:
+        pct_cov = (covered_positions / total_positions) * 100
+    else:
+        pct_cov = 0
 
-    pct_cov = (covered_positions / total_positions) * 100
     return round(pct_cov, 3)
 
 def main(args):
