@@ -32,6 +32,10 @@ process pipeline_provenance {
 
   script:
   """
-  printf -- "- pipeline_name: ${pipeline_name}\\n  pipeline_version: ${pipeline_version}\\n- timestamp_analysis_start: ${analysis_start}\\n" > pipeline_provenance.yml
+  printf -- "- pipeline_name: ${pipeline_name}\\n"       >> pipeline_provenance.yml
+  printf -- "  pipeline_version: ${pipeline_version}\\n" >> pipeline_provenance.yml
+  printf -- "  nextflow_session_id: ${session_id}\\n"    >> pipeline_provenance.yml
+  printf -- "  nextflow_run_name: ${run_name}\\n"        >> pipeline_provenance.yml
+  printf -- "  analysis_start_time: ${analysis_start_time}\\n" >> pipeline_provenance.yml
   """
 }
