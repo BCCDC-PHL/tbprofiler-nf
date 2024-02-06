@@ -148,6 +148,8 @@ process snpit {
 
     tag { sample_id }
 
+    publishDir params.versioned_outdir ? "${params.outdir}/${sample_id}/${params.pipeline_short_name}-v${params.pipeline_minor_version}-output" : "${params.outdir}/${sample_id}", mode: 'copy', pattern: "${sample_id}_snpit_unchecked.tsv"
+
     conda "$baseDir/environments/snpit.yml"
 
     input:
@@ -171,6 +173,8 @@ process snpit {
 process check_snpit_against_tbprofiler {
 
     tag { sample_id }
+
+    executor 'local'
 
     publishDir params.versioned_outdir ? "${params.outdir}/${sample_id}/${params.pipeline_short_name}-v${params.pipeline_minor_version}-output" : "${params.outdir}/${sample_id}", mode: 'copy', pattern: "${sample_id}_snpit.tsv"
 
