@@ -15,8 +15,13 @@ process fastp {
 
   script:
   """
-  printf -- "- process_name: fastp\\n" > ${sample_id}_fastp_provenance.yml
-  printf -- "  tool_name: fastp\\n  tool_version: \$(fastp --version 2>&1 | cut -d ' ' -f 2)\\n" >> ${sample_id}_fastp_provenance.yml
+  printf -- "- process_name: fastp\\n"  >> ${sample_id}_fastp_provenance.yml
+  printf -- "  tools:\\n"               >> ${sample_id}_fastp_provenance.yml
+  printf -- "    - tool_name: fastp\\n" >> ${sample_id}_fastp_provenance.yml
+  printf -- "      tool_version: \$(fastp --version 2>&1 | cut -d ' ' -f 2)\\n" >> ${sample_id}_fastp_provenance.yml
+  printf -- "      parameters:\\n"               >> ${sample_id}_fastp_provenance.yml
+  printf -- "        - parameter: --cut_tail\\n" >> ${sample_id}_fastp_provenance.yml
+  printf -- "          value: null\\n"           >> ${sample_id}_fastp_provenance.yml
 
   fastp \
     --cut_tail \
@@ -79,10 +84,46 @@ process tbprofiler {
     cp results/${sample_id}.results.json ${sample_id}_tbprofiler_full_report.json
 
     split_tbprofiler_csv.py -p ${sample_id} -s ${sample_id} ${sample_id}_tbprofiler_full_report.csv
+    
 
     printf -- "- process_name: tb-profiler\\n" > ${sample_id}_tbprofiler_provenance.yml
-    printf -- "  tool_name: tb-profiler\\n  tool_version: \$(tb-profiler profile --version 2>&1 | cut -d ' ' -f 3)\\n" >> ${sample_id}_tbprofiler_provenance.yml
-    printf -- "  database_version: \$(grep 'Database version' ${sample_id}_tbprofiler_full_report.csv | cut -d',' -f2)\\n" >> ${sample_id}_tbprofiler_provenance.yml
+    printf -- "  tools:\\n"               >> ${sample_id}_tbprofiler_provenance.yml
+    printf -- "    - tool_name: tb-profiler\\n" >> ${sample_id}_tbprofiler_provenance.yml
+    printf -- "      tool_version: \$(tb-profiler profile --version 2>&1 | cut -d ' ' -f 3)\\n" >> ${sample_id}_tbprofiler_provenance.yml
+    printf -- "      subcommand: profile" >> ${sample_id}_tbprofiler_provenance.yml
+    printf -- "      parameters:\\n"               >> ${sample_id}_tbprofiler_provenance.yml
+    printf -- "        - parameter: --platform\\n" >> ${sample_id}_tbprofiler_provenance.yml
+    printf -- "          value: ${params.platform}\\n"           >> ${sample_id}_tbprofiler_provenance.yml
+
+    printf -- "        - parameter: --mapper\\n" >> ${sample_id}_tbprofiler_provenance.yml
+    printf -- "          value: ${params.mapper}\\n"           >> ${sample_id}_tbprofiler_provenance.yml
+
+    printf -- "        - parameter: --caller\\n" >> ${sample_id}_tbprofiler_provenance.yml
+    printf -- "          value: ${params.caller}\\n"           >> ${sample_id}_tbprofiler_provenance.yml
+
+    printf -- "        - parameter: --af\\n" >> ${sample_id}_tbprofiler_provenance.yml
+    printf -- "          value: ${params.min_af_used_for_calling}\\n"           >> ${sample_id}_tbprofiler_provenance.yml
+
+    printf -- "        - parameter: --reporting_af\\n" >> ${sample_id}_tbprofiler_provenance.yml
+    printf -- "          value: ${params.min_af_used_for_prediction}\\n"           >> ${sample_id}_tbprofiler_provenance.yml
+
+    printf -- "        - parameter: --read1\\n" >> ${sample_id}_tbprofiler_provenance.yml
+    printf -- "          value: ${reads_1}\\n"           >> ${sample_id}_tbprofiler_provenance.yml
+
+    printf -- "        - parameter: --read2\\n" >> ${sample_id}_tbprofiler_provenance.yml
+    printf -- "          value: ${reads_2}\\n"           >> ${sample_id}_tbprofiler_provenance.yml
+
+    printf -- "        - parameter: --prefix\\n" >> ${sample_id}_tbprofiler_provenance.yml
+    printf -- "          value: ${sample_id}\\n"           >> ${sample_id}_tbprofiler_provenance.yml
+
+    printf -- "        - parameter: --csv\\n" >> ${sample_id}_tbprofiler_provenance.yml
+    printf -- "          value: null\\n"           >> ${sample_id}_tbprofiler_provenance.yml
+
+    printf -- "        - parameter: --call_whole_genome\\n" >> ${sample_id}_tbprofiler_provenance.yml
+    printf -- "          value: null\\n"           >> ${sample_id}_tbprofiler_provenance.yml
+
+    printf -- "      database_version: \$(grep 'Database version' ${sample_id}_tbprofiler_full_report.csv | cut -d',' -f2)\\n" >> ${sample_id}_tbprofiler_provenance.yml
+
 
     """
 }
@@ -164,8 +205,15 @@ process snpit {
     snpit --input ${vcf} > ${sample_id}_snpit_unchecked.tsv
 
     printf -- "- process_name: snpit\\n" > ${sample_id}_snpit_provenance.yml
-    printf -- "  tool_name: snpit\\n" >> ${sample_id}_snpit_provenance.yml
-    printf -- "  tool_version: \$(snpit --version 2>&1)\\n" >> ${sample_id}_snpit_provenance.yml
+
+    printf -- "  tools:\\n"               >> ${sample_id}_snpit_provenance.yml
+    printf -- "    - tool_name: snpit\\n" >> ${sample_id}_snpit_provenance.yml
+    printf -- "      tool_version:  \$(snpit --version 2>&1)\\n" >> ${sample_id}_snpit_provenance.yml
+
+    printf -- "      parameters:\\n"               >> ${sample_id}_tbprofiler_provenance.yml
+    printf -- "        - parameter: --input\\n" >> ${sample_id}_tbprofiler_provenance.yml
+    printf -- "          value: ${vcf}\\n"           >> ${sample_id}_tbprofiler_provenance.yml
+
     """
 }
 
