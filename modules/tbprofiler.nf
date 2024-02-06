@@ -42,7 +42,8 @@ process tbprofiler {
     tuple val(sample_id), path(reads_1), path(reads_2)
 
     output:
-    tuple val(sample_id), path("${sample_id}_tbprofiler*.{json,csv}"), emit: reports
+    tuple val(sample_id), path("${sample_id}_tbprofiler*.json"), emit: report_json
+    tuple val(sample_id), path("${sample_id}_tbprofiler*.csv"), emit: report_csv
     tuple val(sample_id), path("${sample_id}_tbprofiler*.{bam,bam.bai}"), emit: alignment
     tuple val(sample_id), path("${sample_id}_tbprofiler_targets.vcf"), emit: targets_vcf
     tuple val(sample_id), path("${sample_id}_tbprofiler_whole_genome.vcf"), emit: whole_genome_vcf
@@ -147,24 +148,48 @@ process snpit {
 
     tag { sample_id }
 
-    conda "$baseDir/environments/snpit.yml"
+    publishDir params.versioned_outdir ? "${params.outdir}/${sample_id}/${params.pipeline_short_name}-v${params.pipeline_minor_version}-output" : "${params.outdir}/${sample_id}", mode: 'copy', pattern: "${sample_id}_snpit_unchecked.tsv"
 
-    publishDir params.versioned_outdir ? "${params.outdir}/${sample_id}/${params.pipeline_short_name}-v${params.pipeline_minor_version}-output" : "${params.outdir}/${sample_id}", mode: 'copy', pattern: "${sample_id}_snpit.tsv"
+    conda "$baseDir/environments/snpit.yml"
 
     input:
     tuple val(sample_id), path(vcf)
 
     output:
-    tuple val(sample_id), path("${sample_id}_snpit.tsv")
+    tuple val(sample_id), path("${sample_id}_snpit_unchecked.tsv"), emit: snpit_results
     tuple val(sample_id), path("${sample_id}_snpit_provenance.yml"), emit: provenance
     
     script:
     """
-    snpit --input ${vcf} > ${sample_id}_snpit.tsv
+    snpit --input ${vcf} > ${sample_id}_snpit_unchecked.tsv
 
     printf -- "- process_name: snpit\\n" > ${sample_id}_snpit_provenance.yml
     printf -- "  tool_name: snpit\\n" >> ${sample_id}_snpit_provenance.yml
     printf -- "  tool_version: \$(snpit --version 2>&1)\\n" >> ${sample_id}_snpit_provenance.yml
+    """
+}
+
+
+process check_snpit_against_tbprofiler {
+
+    tag { sample_id }
+
+    executor 'local'
+
+    publishDir params.versioned_outdir ? "${params.outdir}/${sample_id}/${params.pipeline_short_name}-v${params.pipeline_minor_version}-output" : "${params.outdir}/${sample_id}", mode: 'copy', pattern: "${sample_id}_snpit.tsv"
+
+    input:
+    tuple val(sample_id), path(snpit_results), path(tbprofiler_report_json)
+
+    output:
+    tuple val(sample_id), path("${sample_id}_snpit.tsv")
+    
+    script:
+    """
+    check_snpit_against_tbprofiler.py \
+	--snpit ${snpit_results} \
+	--tbprofiler ${tbprofiler_report_json} \
+	> ${sample_id}_snpit.tsv
     """
 }
 
