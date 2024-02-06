@@ -4,19 +4,20 @@ import java.time.LocalDateTime
 
 nextflow.enable.dsl = 2
 
-include { fastp }                     from './modules/tbprofiler.nf'
-include { tbprofiler }                from './modules/tbprofiler.nf'
-include { snpit }                     from './modules/tbprofiler.nf'
-include { rename_ref_in_alignment }   from './modules/tbprofiler.nf'
+include { fastp }                          from './modules/tbprofiler.nf'
+include { tbprofiler }                     from './modules/tbprofiler.nf'
+include { snpit }                          from './modules/tbprofiler.nf'
+include { check_snpit_against_tbprofiler } from './modules/tbprofiler.nf'
+include { rename_ref_in_alignment }        from './modules/tbprofiler.nf'
 include { rename_ref_in_variants as rename_ref_in_targets_variants }       from './modules/tbprofiler.nf'
 include { rename_ref_in_variants as rename_ref_in_whole_genome_variants }  from './modules/tbprofiler.nf'
-include { qualimap_bamqc }            from './modules/tbprofiler.nf'
-include { mpileup }                   from './modules/tbprofiler.nf'
-include { plot_coverage }             from './modules/tbprofiler.nf'
-include { generate_low_coverage_bed } from './modules/tbprofiler.nf'
-include { calculate_gene_coverage }   from './modules/tbprofiler.nf'
-include { pipeline_provenance }       from './modules/provenance.nf'
-include { collect_provenance }        from './modules/provenance.nf'
+include { qualimap_bamqc }                 from './modules/tbprofiler.nf'
+include { mpileup }                        from './modules/tbprofiler.nf'
+include { plot_coverage }                  from './modules/tbprofiler.nf'
+include { generate_low_coverage_bed }      from './modules/tbprofiler.nf'
+include { calculate_gene_coverage }        from './modules/tbprofiler.nf'
+include { pipeline_provenance }            from './modules/provenance.nf'
+include { collect_provenance }             from './modules/provenance.nf'
 
 
 
@@ -55,6 +56,8 @@ workflow {
     }
 
     snpit(ch_whole_genome_variants)
+
+    check_snpit_against_tbprofiler(snpit.out.snpit_results.join(tbprofiler.out.report_json))
 
     qualimap_bamqc(ch_alignment)
 
