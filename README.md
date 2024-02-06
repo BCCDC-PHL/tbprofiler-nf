@@ -10,6 +10,7 @@ flowchart TD
   reads --> fastp
   fastp -- trimmed_reads --> tbprofiler
   tbprofiler -- vcf --> snpit
+  snpit --> check_snpit_against_tbprofiler
   tbprofiler -- bam --> qualimap_bamqc
   tbprofiler -- bam --> mpileup
   mpileup -- depths --> plot_coverage
@@ -49,6 +50,7 @@ The following files will be produced for each sample:
     ├── sample-01_low_coverage_regions.bed
     ├── sample-01_qualimap_alignment_qc.csv
     ├── sample-01_snpit.tsv
+    ├── sample-01_snpit_unchecked.tsv
     ├── sample-01_tbprofiler.bam
     ├── sample-01_tbprofiler.bam.bai
     ├── sample-01_tbprofiler_full_report.csv
