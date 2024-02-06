@@ -36,13 +36,11 @@ def main(args):
 
     if snpit_results['Species'] == 'N/A':
         tbprofiler_report = json.load(open(args.tbprofiler_report))
-        tbprofiler_lineages = tbprofiler_report['lineage']
-        for lineage in tbprofiler_lineages:
-            if re.search('H37Rv', lineage['family']) and lineage['frac'] > args.min_frac:
-                snpit_results['Species'] = 'M. tuberculosis'
-                snpit_results['Lineage'] = tbprofiler_report['main_lin'].replace('lineage', 'Lineage ')
-                snpit_results['Percentage'] = 'N/A'
-                break
+        pct_reads_mapped = tbprofiler_report['qc']['pct_reads_mapped']
+        if tbprofiler_report['main_lin'] == 'lineage4' and pct_reads_mapped >= args.min_percent_reads_mapped:
+            snpit_results['Species'] = 'M. tuberculosis'
+            snpit_results['Lineage'] = tbprofiler_report['main_lin'].replace('lineage', 'Lineage ')
+            snpit_results['Percentage'] = 'N/A'
 
     output_fieldnames = snpit_header
     writer = csv.DictWriter(sys.stdout, fieldnames=output_fieldnames, delimiter='\t', extrasaction='ignore')
@@ -51,9 +49,9 @@ def main(args):
 
 
 if __name__ == '__main__':
-    parser = argparse.ArgumentParser(description='Create a lineage file for H37Rv')
+    parser = argparse.ArgumentParser(description='Check snpit results against tbprofiler')
     parser.add_argument('-s', '--snpit', type=str, help='Output from snpit')
     parser.add_argument('-t', '--tbprofiler-report', type=str, help='TBProfiler full report (json)')
-    parser.add_argument('-f', '--min-frac', type=float, default=0.85, help='Minimum fraction for TBProfiler lineage')
+    parser.add_argument('-p', '--min-percent-reads-mapped', type=float, default=98.0, help='Minimum percent mapped to consider a sample as M. tuberculosis')
     args = parser.parse_args()
     main(args)
