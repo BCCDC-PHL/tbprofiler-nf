@@ -23,11 +23,14 @@ include { collect_provenance }             from './modules/provenance.nf'
 
 workflow {
 
-  ch_start_time = Channel.of(LocalDateTime.now())
-  ch_pipeline_name = Channel.of(workflow.manifest.name)
-  ch_pipeline_version = Channel.of(workflow.manifest.version)
 
-  ch_pipeline_provenance = pipeline_provenance(ch_pipeline_name.combine(ch_pipeline_version).combine(ch_start_time))
+  ch_workflow_metadata = Channel.value([
+	    workflow.sessionId,
+	    workflow.runName,
+	    workflow.manifest.name,
+	    workflow.manifest.version,
+	    workflow.start,
+    ])
 
   if (params.samplesheet_input != 'NO_FILE') {
     ch_fastq = Channel.fromPath(params.samplesheet_input).splitCsv(header: true).map{ it -> [it['ID'], it['R1'], it['R2']] }
@@ -68,7 +71,8 @@ workflow {
     generate_low_coverage_bed(ch_depths)
     
     calculate_gene_coverage(ch_depths.combine(ch_resistance_genes_bed))
-
+    
+    ch_pipeline_provenance = pipeline_provenance(ch_workflow_metadata)
     ch_provenance = fastp.out.provenance
     ch_provenance = ch_provenance.join(tbprofiler.out.provenance).map{ it -> [it[0], [it[1], it[2]]] }
     ch_provenance = ch_provenance.join(snpit.out.provenance).map{ it -> [it[0], it[1] << it[2]] }

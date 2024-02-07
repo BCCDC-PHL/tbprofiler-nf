@@ -25,7 +25,7 @@ process pipeline_provenance {
   executor 'local'
 
   input:
-  tuple val(pipeline_name), val(pipeline_version), val(analysis_start)
+  tuple val(session_id), val(run_name), val(pipeline_name), val(pipeline_version), val(analysis_start_time)
 
   output:
   file("pipeline_provenance.yml")
