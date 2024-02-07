@@ -170,11 +170,22 @@ process qualimap_bamqc {
 
     output:
     tuple val(sample_id), path("${sample_id}_qualimap_alignment_qc.csv"), emit: genome_results
+    tuple val(sample_id), path("${sample_id}_qualimap_bamqc_provenance.yml"), emit: provenance
     
     script:
     """
     qualimap bamqc -bam ${alignment[0]} --outdir ${sample_id}_bamqc
     qualimap_bamqc_genome_results_to_csv.py -s ${sample_id} ${sample_id}_bamqc/genome_results.txt > ${sample_id}_qualimap_alignment_qc.csv
+
+    printf -- "- process_name: qualimap\\n" > ${sample_id}_qualimap_bamqc_provenance.yml
+    printf -- "  tools:\\n"               >> ${sample_id}_qualimap_bamqc_provenance.yml
+    printf -- "    - tool_name: qualimap\\n" >> ${sample_id}_qualimap_bamqc_provenance.yml
+    printf -- "      tool_version: \$(qualimap --version 2>&1 | grep "QualiMap" | awk '{print $2}')\\n" >> ${sample_id}_qualimap_bamqc_provenance.yml
+    printf -- "      subcommand: bamqc\\n" >> ${sample_id}_qualimap_bamqc_provenance.yml
+    printf -- "      parameters:\\n"               >> ${sample_id}_qualimap_bamqc_provenance.yml
+    printf -- "        - parameter: --bam\\n" >> ${sample_id}_qualimap_bamqc_provenance.yml
+    printf -- "          value: ${alignment[0]}\\n"  >> ${sample_id}_qualimap_bamqc_provenance.yml
+
     """
 }
 
@@ -243,6 +254,7 @@ process mpileup {
 
     output:
     tuple val(sample_id), path("${sample_id}_depths.tsv")
+    tuple val(sample_id), path("${sample_id}_mpileup_provenance.yml"), emit: provenance
 
     script:
     """
@@ -255,6 +267,24 @@ process mpileup {
       --min-BQ 0 \
       --count-orphans \
       ${alignment[0]} | cut -f 1-4 >> ${sample_id}_depths.tsv
+
+
+    printf -- "- process_name: mpileup\\n" > ${sample_id}_mpileup_provenance.yml
+    printf -- "  tools:\\n"               >> ${sample_id}_mpileup_provenance.yml
+    printf -- "    - tool_name: samtools\\n" >> ${sample_id}_mpileup_provenance.yml
+    printf -- "      tool_version: \$(samtools --version 2>&1 | awk 'NR==1 {print $2}')\\n" >> ${sample_id}_mpileup_provenance.yml
+    printf -- "      subcommand: mpileup\\n" >> ${sample_id}_mpileup_provenance.yml
+    printf -- "      parameters:\\n"               >> ${sample_id}_mpileup_provenance.yml
+    printf -- "        - parameter: --fasta-ref\\n" >> ${sample_id}_mpileup_provenance.yml
+    printf -- "          value: ${ref}\\n"           >> ${sample_id}_mpileup_provenance.yml
+
+    printf -- "        - parameter: --min-BQ\\n" >> ${sample_id}_mpileup_provenance.yml
+    printf -- "          value: 0\\n"           >> ${sample_id}_mpileup_provenance.yml
+
+    printf -- "        - parameter: --count-orphans\\n" >> ${sample_id}_mpileup_provenance.yml
+    printf -- "          value: null\\n"           >> ${sample_id}_mpileup_provenance.yml
+
+
     """
 }
 
