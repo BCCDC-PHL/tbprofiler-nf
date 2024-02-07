@@ -210,9 +210,9 @@ process snpit {
     printf -- "    - tool_name: snpit\\n" >> ${sample_id}_snpit_provenance.yml
     printf -- "      tool_version:  \$(snpit --version 2>&1)\\n" >> ${sample_id}_snpit_provenance.yml
 
-    printf -- "      parameters:\\n"               >> ${sample_id}_tbprofiler_provenance.yml
-    printf -- "        - parameter: --input\\n" >> ${sample_id}_tbprofiler_provenance.yml
-    printf -- "          value: ${vcf}\\n"           >> ${sample_id}_tbprofiler_provenance.yml
+    printf -- "      parameters:\\n"               >> ${sample_id}_snpit_provenance.yml
+    printf -- "        - parameter: --input\\n" >> ${sample_id}_snpit_provenance.yml
+    printf -- "          value: ${vcf}\\n"           >> ${sample_id}_snpit_provenance.yml
 
     """
 }
