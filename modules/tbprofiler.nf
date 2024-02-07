@@ -86,7 +86,7 @@ process tbprofiler {
     split_tbprofiler_csv.py -p ${sample_id} -s ${sample_id} ${sample_id}_tbprofiler_full_report.csv
     
 
-    printf -- "- process_name: tb-profiler\\n" > ${sample_id}_tbprofiler_provenance.yml
+    printf -- "- process_name: tbprofiler\\n" > ${sample_id}_tbprofiler_provenance.yml
     printf -- "  tools:\\n"               >> ${sample_id}_tbprofiler_provenance.yml
     printf -- "    - tool_name: tb-profiler\\n" >> ${sample_id}_tbprofiler_provenance.yml
     printf -- "      database_version: \$(grep 'Database version' ${sample_id}_tbprofiler_full_report.csv | cut -d',' -f2)\\n" >> ${sample_id}_tbprofiler_provenance.yml
@@ -107,12 +107,6 @@ process tbprofiler {
 
     printf -- "        - parameter: --reporting_af\\n" >> ${sample_id}_tbprofiler_provenance.yml
     printf -- "          value: ${params.min_af_used_for_prediction}\\n"           >> ${sample_id}_tbprofiler_provenance.yml
-
-    printf -- "        - parameter: --read1\\n" >> ${sample_id}_tbprofiler_provenance.yml
-    printf -- "          value: ${reads_1}\\n"           >> ${sample_id}_tbprofiler_provenance.yml
-
-    printf -- "        - parameter: --read2\\n" >> ${sample_id}_tbprofiler_provenance.yml
-    printf -- "          value: ${reads_2}\\n"           >> ${sample_id}_tbprofiler_provenance.yml
 
     printf -- "        - parameter: --prefix\\n" >> ${sample_id}_tbprofiler_provenance.yml
     printf -- "          value: ${sample_id}\\n"           >> ${sample_id}_tbprofiler_provenance.yml
