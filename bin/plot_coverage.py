@@ -62,11 +62,15 @@ def plot_coverage(depths: pd.DataFrame, resistance_genes: dict={}, sample_name: 
     :return: matplotlib figure
     :rtype: matplotlib.figure.Figure
     """
-    percent_coverage_above_threshold = (
-        sum(1 if x > threshold else 0 for x in depths.depth)
-        / depths.shape[0]
-        * 100
-    )
+    try:
+        percent_coverage_above_threshold = (
+            sum(1 if x > threshold else 0 for x in depths.depth)
+            / depths.shape[0]
+            * 100
+        )
+
+    except ZeroDivisionError:
+        percent_coverage_above_threshold = 0
 
     if resistance_genes:
         coverage_plot, (ax_depth, ax_genes) = plt.subplots(2, gridspec_kw={'height_ratios': [10, 1]}, figsize=(64, 8), sharex=True)
