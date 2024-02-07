@@ -86,13 +86,14 @@ workflow {
     ch_pipeline_provenance = pipeline_provenance(ch_workflow_metadata)
     ch_provenance = ch_provenance.combine(ch_pipeline_provenance).map{ it -> [it[0], [it[1]]] }
     ch_provenance = ch_provenance.join(hash_files.out.provenance).map{ it -> [it[0], it[1] << it[2]] }
-    ch_provenance = fastp.out.provenance.map{ it -> [it[0], it[1] << it[2]] }
+    ch_provenance = ch_provenance.join(fastp.out.provenance).map{ it -> [it[0], it[1] << it[2]] }
     ch_provenance = ch_provenance.join(tbprofiler.out.provenance).map{ it -> [it[0], [it[1], it[2]]] }
     ch_provenance = ch_provenance.join(snpit.out.provenance).map{ it -> [it[0], it[1] << it[2]] }
 
-    // ch_provenance = ch_provenance.join(ch_fastq.map{ it -> it[0] }.combine(ch_pipeline_provenance)).map{ it -> [it[0], it[1] ] }
-    // ch_provenance = ch_provenance.join(hash_files.out.provenance).map{ it -> [it[0], it[1] << it[2]] }
+    //ch_provenance = ch_provenance.join(ch_fastq.map{ it -> it[0] }.combine(ch_pipeline_provenance)).map{ it -> [it[0], it[1] ] }
+    //ch_provenance = ch_provenance.join(hash_files.out.provenance).map{ it -> [it[0], it[1] << it[2]] }
 
     collect_provenance(ch_provenance)
   
+
 }
