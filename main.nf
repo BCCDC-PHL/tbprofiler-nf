@@ -4,6 +4,7 @@ import java.time.LocalDateTime
 
 nextflow.enable.dsl = 2
 
+include { hash_files }                   from './modules/hash_files.nf'
 include { fastp }                          from './modules/tbprofiler.nf'
 include { tbprofiler }                     from './modules/tbprofiler.nf'
 include { snpit }                          from './modules/tbprofiler.nf'
@@ -41,6 +42,9 @@ workflow {
   ch_resistance_genes_bed = Channel.fromPath("${baseDir}/assets/resistance_genes.bed")
 
   main:
+
+    hash_files(ch_fastq.map{ it -> [it[0], [it[1], it[2]]] }.combine(Channel.of("fastq-input")))
+
     fastp(ch_fastq)
 
     tbprofiler(fastp.out.reads)
@@ -72,12 +76,22 @@ workflow {
     
     calculate_gene_coverage(ch_depths.combine(ch_resistance_genes_bed))
     
+    // Collect Provenance
+    // The basic idea is to build up a channel with the following structure:
+    // [sample_id, [provenance_file_1.yml, provenance_file_2.yml, provenance_file_3.yml...]]
+    // At each step, we add another provenance file to the list using the << operator...
+    // ...and then concatenate them all together in the 'collect_provenance' process.
+    ch_sample_ids = ch_fastq.map{ it -> it[0] }
+    ch_provenance = ch_sample_ids
     ch_pipeline_provenance = pipeline_provenance(ch_workflow_metadata)
-    ch_provenance = fastp.out.provenance
+    ch_provenance = ch_provenance.combine(ch_pipeline_provenance).map{ it -> [it[0], [it[1]]] }
+    ch_provenance = ch_provenance.join(hash_files.out.provenance).map{ it -> [it[0], it[1] << it[2]] }
+    ch_provenance = fastp.out.provenance.map{ it -> [it[0], it[1] << it[2]] }
     ch_provenance = ch_provenance.join(tbprofiler.out.provenance).map{ it -> [it[0], [it[1], it[2]]] }
     ch_provenance = ch_provenance.join(snpit.out.provenance).map{ it -> [it[0], it[1] << it[2]] }
 
-    ch_provenance = ch_provenance.join(ch_fastq.map{ it -> it[0] }.combine(ch_pipeline_provenance)).map{ it -> [it[0], it[1] ] }
+    // ch_provenance = ch_provenance.join(ch_fastq.map{ it -> it[0] }.combine(ch_pipeline_provenance)).map{ it -> [it[0], it[1] ] }
+    // ch_provenance = ch_provenance.join(hash_files.out.provenance).map{ it -> [it[0], it[1] << it[2]] }
 
     collect_provenance(ch_provenance)
   
