@@ -67,7 +67,7 @@ The following files will be produced for each sample:
 ## Provenance
 
 In the output directory for each sample, a provenance file will be written with the following format:
-
+```
 - pipeline_name: BCCDC-PHL/tbprofiler-nf
   pipeline_version: 0.2.2
   nextflow_session_id: ee5b4986-6ada-4eab-a294-ed0cbb18427d
@@ -116,3 +116,4 @@ In the output directory for each sample, a provenance file will be written with 
       parameters:
         - parameter: --input
           value: 23s629_tbprofiler_whole_genome.vcf
+```
