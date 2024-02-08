@@ -62,3 +62,57 @@ The following files will be produced for each sample:
     ├── sample-01_tbprofiler_targets.vcf
     └── sample-01_tbprofiler_whole_genome.vcf
 ```
+
+
+## Provenance
+
+In the output directory for each sample, a provenance file will be written with the following format:
+```
+- pipeline_name: BCCDC-PHL/tbprofiler-nf
+  pipeline_version: 0.2.2
+  nextflow_session_id: ee5b4986-6ada-4eab-a294-ed0cbb18427d
+  nextflow_run_name: furious_murdock
+  analysis_start_time: 2024-02-01T16:37:26.062501-08:00
+- input_filename: SAMPLE-ID_S133_L001_R1_001.fastq.gz
+  file_type: fastq-input
+  sha256: 1b6a9a616ec3fd8432ff02f51d60fb6443617c29761b96234ede9c65efe06547
+- input_filename: SAMPLE-ID_S133_L001_R2_001.fastq.gz
+  file_type: fastq-input
+  sha256: f6954b1a174fbead8a035ae7cdfda549fcc751be8847a330505df49de59bed96
+- process_name: fastp
+  tools:
+    - tool_name: fastp
+      tool_version: 0.23.2
+      parameters:
+        - parameter: --cut_tail
+          value: null
+- process_name: tbprofiler
+  tools:
+    - tool_name: tb-profiler
+      tool_version: 4.3.0
+      subcommand: profile
+      parameters:
+        - parameter: --platform
+          value: illumina
+        - parameter: --mapper
+          value: bwa
+        - parameter: --caller
+          value: bcftools
+        - parameter: --af
+          value: 0.1
+        - parameter: --reporting_af
+          value: 0.1
+        - parameter: --prefix
+          value: 23s629
+        - parameter: --csv
+          value: null
+        - parameter: --call_whole_genome
+          value: null
+- process_name: snpit
+  tools:
+    - tool_name: snpit
+      tool_version:  1.0.0
+      parameters:
+        - parameter: --input
+          value: 23s629_tbprofiler_whole_genome.vcf
+```

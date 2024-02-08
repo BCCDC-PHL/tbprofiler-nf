@@ -25,13 +25,17 @@ process pipeline_provenance {
   executor 'local'
 
   input:
-  tuple val(pipeline_name), val(pipeline_version), val(analysis_start)
+  tuple val(session_id), val(run_name), val(pipeline_name), val(pipeline_version), val(analysis_start_time)
 
   output:
   file("pipeline_provenance.yml")
 
   script:
   """
-  printf -- "- pipeline_name: ${pipeline_name}\\n  pipeline_version: ${pipeline_version}\\n- timestamp_analysis_start: ${analysis_start}\\n" > pipeline_provenance.yml
+  printf -- "- pipeline_name: ${pipeline_name}\\n"       >> pipeline_provenance.yml
+  printf -- "  pipeline_version: ${pipeline_version}\\n" >> pipeline_provenance.yml
+  printf -- "  nextflow_session_id: ${session_id}\\n"    >> pipeline_provenance.yml
+  printf -- "  nextflow_run_name: ${run_name}\\n"        >> pipeline_provenance.yml
+  printf -- "  analysis_start_time: ${analysis_start_time}\\n" >> pipeline_provenance.yml
   """
 }

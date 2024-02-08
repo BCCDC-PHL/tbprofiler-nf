@@ -4,6 +4,7 @@ import java.time.LocalDateTime
 
 nextflow.enable.dsl = 2
 
+include { hash_files }                     from './modules/hash_files.nf'
 include { fastp }                          from './modules/tbprofiler.nf'
 include { tbprofiler }                     from './modules/tbprofiler.nf'
 include { snpit }                          from './modules/tbprofiler.nf'
@@ -23,11 +24,14 @@ include { collect_provenance }             from './modules/provenance.nf'
 
 workflow {
 
-  ch_start_time = Channel.of(LocalDateTime.now())
-  ch_pipeline_name = Channel.of(workflow.manifest.name)
-  ch_pipeline_version = Channel.of(workflow.manifest.version)
 
-  ch_pipeline_provenance = pipeline_provenance(ch_pipeline_name.combine(ch_pipeline_version).combine(ch_start_time))
+  ch_workflow_metadata = Channel.value([
+	workflow.sessionId,
+	workflow.runName,
+	workflow.manifest.name,
+	workflow.manifest.version,
+	workflow.start,
+    ])
 
   if (params.samplesheet_input != 'NO_FILE') {
     ch_fastq = Channel.fromPath(params.samplesheet_input).splitCsv(header: true).map{ it -> [it['ID'], it['R1'], it['R2']] }
@@ -38,6 +42,9 @@ workflow {
   ch_resistance_genes_bed = Channel.fromPath("${baseDir}/assets/resistance_genes.bed")
 
   main:
+
+    hash_files(ch_fastq.map{ it -> [it[0], [it[1], it[2]]] }.combine(Channel.of("fastq-input")))
+
     fastp(ch_fastq)
 
     tbprofiler(fastp.out.reads)
@@ -61,20 +68,34 @@ workflow {
 
     qualimap_bamqc(ch_alignment)
 
-    ch_depths = mpileup(ch_alignment.combine(ch_ref))
+    mpileup(ch_alignment.combine(ch_ref))
+
+    ch_depths = mpileup.out.depths
 
     plot_coverage(ch_depths.combine(ch_resistance_genes_bed))
 
     generate_low_coverage_bed(ch_depths)
     
     calculate_gene_coverage(ch_depths.combine(ch_resistance_genes_bed))
-
-    ch_provenance = fastp.out.provenance
-    ch_provenance = ch_provenance.join(tbprofiler.out.provenance).map{ it -> [it[0], [it[1], it[2]]] }
-    ch_provenance = ch_provenance.join(snpit.out.provenance).map{ it -> [it[0], it[1] << it[2]] }
-
-    ch_provenance = ch_provenance.join(ch_fastq.map{ it -> it[0] }.combine(ch_pipeline_provenance)).map{ it -> [it[0], it[1] ] }
+    
+    // Collect Provenance
+    // The basic idea is to build up a channel with the following structure:
+    // [sample_id, [provenance_file_1.yml, provenance_file_2.yml, provenance_file_3.yml...]]
+    // At each step, we add another provenance file to the list using the << operator...
+    // ...and then concatenate them all together in the 'collect_provenance' process.
+    ch_sample_ids = ch_fastq.map{ it -> it[0] }
+    ch_provenance = ch_sample_ids
+    ch_pipeline_provenance = pipeline_provenance(ch_workflow_metadata)
+    ch_provenance = ch_provenance.combine(ch_pipeline_provenance).map{ it ->     [it[0], [it[1]]] }
+    ch_provenance = ch_provenance.join(hash_files.out.provenance).map{ it ->     [it[0], it[1] << it[2]] }
+    ch_provenance = ch_provenance.join(fastp.out.provenance).map{ it ->          [it[0], it[1] << it[2]] }
+    ch_provenance = ch_provenance.join(tbprofiler.out.provenance).map{ it ->     [it[0], it[1] << it[2]] }
+    ch_provenance = ch_provenance.join(snpit.out.provenance).map{ it ->          [it[0], it[1] << it[2]] }
+    ch_provenance = ch_provenance.join(mpileup.out.provenance).map{ it ->        [it[0], it[1] << it[2]] }
+    ch_provenance = ch_provenance.join(qualimap_bamqc.out.provenance).map{ it -> [it[0], it[1] << it[2]] }
+    
 
     collect_provenance(ch_provenance)
   
+
 }
