@@ -16,3 +16,5 @@ echo ". /opt/minconda3/etc/profile.d/conda.sh" >> ~/.bashrc
 conda update -n base -c defaults conda
 
 conda install -y -c conda-forge mamba
+
+conda init bash
