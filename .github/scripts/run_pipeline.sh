@@ -4,6 +4,8 @@ set -eo pipefail
 
 sed -i 's/cpus = \d/cpus = 4/g' nextflow.config 
 
+cat nextflow.config
+
 nextflow run main.nf \
 	 -profile conda \
 	 --cache ${HOME}/.conda/envs \
