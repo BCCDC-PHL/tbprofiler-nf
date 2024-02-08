@@ -266,13 +266,13 @@ def main(args):
     
 
     with open(args.prefix + '_tbprofiler_summary.csv', 'w', newline=os.linesep) as f:
-        writer = csv.DictWriter(f, fieldnames=summary_fields)
+        writer = csv.DictWriter(f, fieldnames=summary_fields, dialect='unix', quoting=csv.QUOTE_MINIMAL, extrasaction='ignore')
         writer.writeheader()
         for row in summary:
             writer.writerow(row)
 
     with open(args.prefix + '_tbprofiler_lineage.csv', 'w', newline=os.linesep) as f:
-        writer = csv.DictWriter(f, fieldnames=lineage_fields)
+        writer = csv.DictWriter(f, fieldnames=lineage_fields, dialect='unix', quoting=csv.QUOTE_MINIMAL, extrasaction='ignore')
         writer.writeheader()
         for row in lineage_report:
             writer.writerow(row)
@@ -283,13 +283,13 @@ def main(args):
     
 
     with open(args.prefix + '_tbprofiler_resistance.csv', 'w', newline=os.linesep) as f:
-        writer = csv.DictWriter(f, fieldnames=resistance_fields)
+        writer = csv.DictWriter(f, fieldnames=resistance_fields, dialect='unix', quoting=csv.QUOTE_MINIMAL, extrasaction='ignore')
         writer.writeheader()
         for row in resistance_table:
             writer.writerow(row)
 
     with open(args.prefix + '_tbprofiler_resistance_mutations.csv', 'w', newline=os.linesep) as f:
-        writer = csv.DictWriter(f, fieldnames=mutation_fields)
+        writer = csv.DictWriter(f, fieldnames=mutation_fields, dialect='unix', quoting=csv.QUOTE_MINIMAL, extrasaction='ignore')
         writer.writeheader()
         for row in mutation_table:
             writer.writerow(row)

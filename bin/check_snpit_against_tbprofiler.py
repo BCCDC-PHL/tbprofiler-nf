@@ -60,7 +60,7 @@ def main(args):
         
 
     output_fieldnames = snpit_header
-    writer = csv.DictWriter(sys.stdout, fieldnames=output_fieldnames, delimiter='\t', extrasaction='ignore')
+    writer = csv.DictWriter(sys.stdout, fieldnames=output_fieldnames, dialect='excel-tab', extrasaction='ignore')
     writer.writeheader()
     writer.writerow(snpit_results)
 
