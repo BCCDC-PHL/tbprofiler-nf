@@ -62,11 +62,15 @@ def plot_coverage(depths: pd.DataFrame, resistance_genes: dict={}, sample_name: 
     :return: matplotlib figure
     :rtype: matplotlib.figure.Figure
     """
-    percent_coverage_above_threshold = (
-        sum(1 if x > threshold else 0 for x in depths.depth)
-        / depths.shape[0]
-        * 100
-    )
+    try:
+        percent_coverage_above_threshold = (
+            sum(1 if x > threshold else 0 for x in depths.depth)
+            / depths.shape[0]
+            * 100
+        )
+
+    except ZeroDivisionError:
+        percent_coverage_above_threshold = 0
 
     if resistance_genes:
         coverage_plot, (ax_depth, ax_genes) = plt.subplots(2, gridspec_kw={'height_ratios': [10, 1]}, figsize=(64, 8), sharex=True)
@@ -74,7 +78,11 @@ def plot_coverage(depths: pd.DataFrame, resistance_genes: dict={}, sample_name: 
         threshold_line = ax_depth.axhline(y=threshold, color="red", linestyle="--", linewidth=0.5)
         ax_depth.set_ylabel("Depth of coverage")
         ax_depth.set_title(f"Percent bases with coverage above {threshold}X: {percent_coverage_above_threshold: .1f}% | Rolling window: {rolling_window} nt")
-        coverage_plot.suptitle(f"Ref: {depths.iloc[0].chrom} | Sample: {sample_name}")
+        try:
+            coverage_plot.suptitle(f"Ref: {depths.iloc[0].chrom} | Sample: {sample_name}")
+        except IndexError:
+            coverage_plot.suptitle(f"Ref: H37Rv | Sample: {sample_name}")
+
         if log_scale:
             ax_depth.set_yscale('log')
             ax_depth.set_ylim(1, y_limit)
@@ -127,7 +135,11 @@ def plot_coverage(depths: pd.DataFrame, resistance_genes: dict={}, sample_name: 
         plt.title(
             f"Percent bases with coverage above {threshold}X: {percent_coverage_above_threshold: .1f}% | Rolling window: {rolling_window} nt"
         )
-        plt.suptitle(f"Ref: {depths.iloc[0].chrom} | Sample: {sample_name}")
+        try:
+            plt.suptitle(f"Ref: {depths.iloc[0].chrom} | Sample: {sample_name}")
+        except IndexError:
+            plt.suptitle(f"Ref: H37Rv | Sample: {sample_name}")
+
 
     # line_plot.set_xticks(range(0, depths.shape[0], 100000), minor=True)
     
