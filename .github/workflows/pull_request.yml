@@ -8,7 +8,7 @@ jobs:
   test:
     strategy:
       matrix:
-        nextflow_version: [21.04, 23.10]
+        nextflow_version: ["21.04.3", "23.10.1"]
     name: Run tests
     runs-on: ubuntu-latest
     steps:
