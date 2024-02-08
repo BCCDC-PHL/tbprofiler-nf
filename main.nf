@@ -86,12 +86,12 @@ workflow {
     ch_sample_ids = ch_fastq.map{ it -> it[0] }
     ch_provenance = ch_sample_ids
     ch_pipeline_provenance = pipeline_provenance(ch_workflow_metadata)
-    ch_provenance = ch_provenance.combine(ch_pipeline_provenance).map{ it -> [it[0], [it[1]]] }
-    ch_provenance = ch_provenance.join(hash_files.out.provenance).map{ it -> [it[0], it[1] << it[2]] }
-    ch_provenance = ch_provenance.join(fastp.out.provenance).map{ it -> [it[0], it[1] << it[2]] }
-    ch_provenance = ch_provenance.join(tbprofiler.out.provenance).map{ it -> [it[0], [it[1], it[2]]] }
-    ch_provenance = ch_provenance.join(snpit.out.provenance).map{ it -> [it[0], it[1] << it[2]] }
-    ch_provenance = ch_provenance.join(mpileup.out.provenance).map{ it -> [it[0], it[1] << it[2]] }
+    ch_provenance = ch_provenance.combine(ch_pipeline_provenance).map{ it ->     [it[0], [it[1]]] }
+    ch_provenance = ch_provenance.join(hash_files.out.provenance).map{ it ->     [it[0], it[1] << it[2]] }
+    ch_provenance = ch_provenance.join(fastp.out.provenance).map{ it ->          [it[0], it[1] << it[2]] }
+    ch_provenance = ch_provenance.join(tbprofiler.out.provenance).map{ it ->     [it[0], it[1] << it[2]] }
+    ch_provenance = ch_provenance.join(snpit.out.provenance).map{ it ->          [it[0], it[1] << it[2]] }
+    ch_provenance = ch_provenance.join(mpileup.out.provenance).map{ it ->        [it[0], it[1] << it[2]] }
     ch_provenance = ch_provenance.join(qualimap_bamqc.out.provenance).map{ it -> [it[0], it[1] << it[2]] }
     
 
