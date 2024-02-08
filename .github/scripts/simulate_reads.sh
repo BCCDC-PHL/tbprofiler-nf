@@ -20,3 +20,9 @@ art_illumina \
     --qShift 0 \
     --qShift2 0 \
     --out .github/data/fastq/NC000962.3_R
+
+mv .github/data/fastq/NC000962.3_R1.fq .github/data/fastq/NC000962.3_R1.fastq
+mv .github/data/fastq/NC000962.3_R2.fq .github/data/fastq/NC000962.3_R2.fastq
+
+gzip .github/data/fastq/NC000962.3_R1.fastq
+gzip .github/data/fastq/NC000962.3_R2.fastq
