@@ -4,7 +4,7 @@ import java.time.LocalDateTime
 
 nextflow.enable.dsl = 2
 
-include { hash_files }                   from './modules/hash_files.nf'
+include { hash_files }                     from './modules/hash_files.nf'
 include { fastp }                          from './modules/tbprofiler.nf'
 include { tbprofiler }                     from './modules/tbprofiler.nf'
 include { snpit }                          from './modules/tbprofiler.nf'
@@ -26,11 +26,11 @@ workflow {
 
 
   ch_workflow_metadata = Channel.value([
-	    workflow.sessionId,
-	    workflow.runName,
-	    workflow.manifest.name,
-	    workflow.manifest.version,
-	    workflow.start,
+	workflow.sessionId,
+	workflow.runName,
+	workflow.manifest.name,
+	workflow.manifest.version,
+	workflow.start,
     ])
 
   if (params.samplesheet_input != 'NO_FILE') {
@@ -68,7 +68,9 @@ workflow {
 
     qualimap_bamqc(ch_alignment)
 
-    ch_depths = mpileup(ch_alignment.combine(ch_ref))
+    mpileup(ch_alignment.combine(ch_ref))
+
+    ch_depths = mpileup.out.depths
 
     plot_coverage(ch_depths.combine(ch_resistance_genes_bed))
 
@@ -89,7 +91,7 @@ workflow {
     ch_provenance = ch_provenance.join(fastp.out.provenance).map{ it -> [it[0], it[1] << it[2]] }
     ch_provenance = ch_provenance.join(tbprofiler.out.provenance).map{ it -> [it[0], [it[1], it[2]]] }
     ch_provenance = ch_provenance.join(snpit.out.provenance).map{ it -> [it[0], it[1] << it[2]] }
-    ch_provenance = ch_provenance.join(mipileup.out.provenance).map{ it -> [it[0], it[1] << it[2]] }
+    ch_provenance = ch_provenance.join(mpileup.out.provenance).map{ it -> [it[0], it[1] << it[2]] }
     ch_provenance = ch_provenance.join(qualimap_bamqc.out.provenance).map{ it -> [it[0], it[1] << it[2]] }
     
 
