@@ -1,3 +1,3 @@
 #!/bin/bash
 
-mamba env create -f .github/environments/art.yml
+conda env create -f .github/environments/art.yml
