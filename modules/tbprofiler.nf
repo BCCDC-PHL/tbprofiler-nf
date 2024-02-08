@@ -89,7 +89,6 @@ process tbprofiler {
     printf -- "- process_name: tbprofiler\\n" > ${sample_id}_tbprofiler_provenance.yml
     printf -- "  tools:\\n"               >> ${sample_id}_tbprofiler_provenance.yml
     printf -- "    - tool_name: tb-profiler\\n" >> ${sample_id}_tbprofiler_provenance.yml
-    printf -- "      database_version: \$(grep 'Database version' ${sample_id}_tbprofiler_full_report.csv | cut -d',' -f2)\\n" >> ${sample_id}_tbprofiler_provenance.yml
     printf -- "      tool_version: \$(tb-profiler profile --version 2>&1 | cut -d ' ' -f 3)\\n" >> ${sample_id}_tbprofiler_provenance.yml
     printf -- "      subcommand: profile\\n" >> ${sample_id}_tbprofiler_provenance.yml
     printf -- "      parameters:\\n"               >> ${sample_id}_tbprofiler_provenance.yml
