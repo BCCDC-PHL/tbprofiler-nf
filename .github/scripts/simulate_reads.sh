@@ -1,6 +1,12 @@
 #!/bin/bash
 
 
+source ${HOME}/.bashrc
+
+eval "$(conda shell.bash hook)"
+
+conda activate art
+
 art_illumina \
     --paired \
     --in .github/data/assemblies/NC_000962.3.fa \
