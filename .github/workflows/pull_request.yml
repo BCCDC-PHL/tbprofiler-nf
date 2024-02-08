@@ -35,6 +35,7 @@ jobs:
     - name: Run Pipeline
       run: bash .github/scripts/run_pipeline.sh
     - name: Prepare Artifacts
+      if: always()
       run: bash .github/scripts/prepare_artifacts.sh
     - name: Upload Artifacts
       uses: actions/upload-artifact@v4
