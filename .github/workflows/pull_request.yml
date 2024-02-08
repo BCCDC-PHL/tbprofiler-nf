@@ -16,4 +16,9 @@ jobs:
       run: bash .github/scripts/install_conda.sh
     - name: Install Nextflow
       run: bash .github/scripts/install_nextflow.sh
-      
+    - name: Create ART Read-Simulation Environment
+      run: bash .github/scripts/create_art_environment.sh
+    - name: Download Assemblies
+      run: bash .github/scripts/download_assemblies.sh
+    - name: Simulate Reads
+      run: conda activate art && bash ./github/scripts/simulate_reads.sh
