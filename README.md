@@ -89,7 +89,6 @@ In the output directory for each sample, a provenance file will be written with 
 - process_name: tbprofiler
   tools:
     - tool_name: tb-profiler
-      database_version: tbdb_4738132_Jody Phelan <jody.phelan@lshtm.ac.uk>_Thu Jul 21 16:19:40 2022 +0100
       tool_version: 4.3.0
       subcommand: profile
       parameters:
