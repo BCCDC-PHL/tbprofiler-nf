@@ -2,7 +2,7 @@ process fastp {
 
     tag { sample_id }
 
-    publishDir params.versioned_outdir ? "${params.outdir}/${sample_id}/${params.pipeline_short_name}-v${params.pipeline_minor_version}-output" : "${params.outdir}/${sample_id}", pattern: "${sample_id}_fastp.{json,csv}", mode: 'copy'
+    publishDir "${params.outdir}/${sample_id}", pattern: "${sample_id}_fastp.{json,csv}", mode: 'copy'
 
     input:
     tuple val(sample_id), path(reads_1), path(reads_2)
@@ -40,8 +40,8 @@ process tbprofiler {
 
     tag { sample_id }
     
-    publishDir params.versioned_outdir ? "${params.outdir}/${sample_id}/${params.pipeline_short_name}-v${params.pipeline_minor_version}-output" : "${params.outdir}/${sample_id}", mode: 'copy', pattern: "${sample_id}_tbprofiler*.{csv,json}"
-    publishDir params.versioned_outdir ? "${params.outdir}/${sample_id}/${params.pipeline_short_name}-v${params.pipeline_minor_version}-output" : "${params.outdir}/${sample_id}", mode: 'copy', pattern: "${sample_id}_tbprofiler*.{bam,bam.bai,vcf}", enabled: !params.rename_ref
+    publishDir "${params.outdir}/${sample_id}", mode: 'copy', pattern: "${sample_id}_tbprofiler*.{csv,json}"
+    publishDir "${params.outdir}/${sample_id}", mode: 'copy', pattern: "${sample_id}_tbprofiler*.{bam,bam.bai,vcf}", enabled: !params.rename_ref
 
     input:
     tuple val(sample_id), path(reads_1), path(reads_2)
@@ -126,7 +126,7 @@ process rename_ref_in_alignment {
 
   tag { sample_id }
   
-  publishDir params.versioned_outdir ? "${params.outdir}/${sample_id}/${params.pipeline_short_name}-v${params.pipeline_minor_version}-output" : "${params.outdir}/${sample_id}", mode: 'copy', pattern: "${sample_id}_tbprofiler*.{bam,bam.bai}", enabled: params.rename_ref, saveAs: { x -> x.replace("_renamed", "") }
+  publishDir "${params.outdir}/${sample_id}", mode: 'copy', pattern: "${sample_id}_tbprofiler*.{bam,bam.bai}", enabled: params.rename_ref, saveAs: { x -> x.replace("_renamed", "") }
   
   input:
   tuple val(sample_id), path(alignment)
@@ -145,7 +145,7 @@ process rename_ref_in_variants {
 
   tag { sample_id }
 
-  publishDir params.versioned_outdir ? "${params.outdir}/${sample_id}/${params.pipeline_short_name}-v${params.pipeline_minor_version}-output" : "${params.outdir}/${sample_id}", mode: 'copy', pattern: "${sample_id}_tbprofiler*.vcf", enabled: params.rename_ref, saveAs: { x -> x.replace("_renamed", "") }
+  publishDir "${params.outdir}/${sample_id}", mode: 'copy', pattern: "${sample_id}_tbprofiler*.vcf", enabled: params.rename_ref, saveAs: { x -> x.replace("_renamed", "") }
 
   input:
   tuple val(sample_id), path(variants)
@@ -163,7 +163,7 @@ process qualimap_bamqc {
 
     tag { sample_id }
 
-    publishDir params.versioned_outdir ? "${params.outdir}/${sample_id}/${params.pipeline_short_name}-v${params.pipeline_minor_version}-output" : "${params.outdir}/${sample_id}", mode: 'copy', pattern: "${sample_id}_qualimap_alignment_qc.csv"
+    publishDir "${params.outdir}/${sample_id}", mode: 'copy', pattern: "${sample_id}_qualimap_alignment_qc.csv"
 
     input:
     tuple val(sample_id), file(alignment)
@@ -194,7 +194,7 @@ process snpit {
 
     tag { sample_id }
 
-    publishDir params.versioned_outdir ? "${params.outdir}/${sample_id}/${params.pipeline_short_name}-v${params.pipeline_minor_version}-output" : "${params.outdir}/${sample_id}", mode: 'copy', pattern: "${sample_id}_snpit_unchecked.tsv"
+    publishDir "${params.outdir}/${sample_id}", mode: 'copy', pattern: "${sample_id}_snpit_unchecked.tsv"
 
     conda "$baseDir/environments/snpit.yml"
 
@@ -226,7 +226,7 @@ process check_snpit_against_tbprofiler {
 
     executor 'local'
 
-    publishDir params.versioned_outdir ? "${params.outdir}/${sample_id}/${params.pipeline_short_name}-v${params.pipeline_minor_version}-output" : "${params.outdir}/${sample_id}", mode: 'copy', pattern: "${sample_id}_snpit.tsv"
+    publishDir "${params.outdir}/${sample_id}", mode: 'copy', pattern: "${sample_id}_snpit.tsv"
 
     input:
     tuple val(sample_id), path(snpit_results), path(tbprofiler_report_json)
@@ -292,7 +292,7 @@ process plot_coverage {
     
     conda "$baseDir/environments/seaborn.yml"
     
-    publishDir params.versioned_outdir ? "${params.outdir}/${sample_id}/${params.pipeline_short_name}-v${params.pipeline_minor_version}-output" : "${params.outdir}/${sample_id}", mode: 'copy', pattern: "${sample_id}_coverage_plot.png"
+    publishDir "${params.outdir}/${sample_id}", mode: 'copy', pattern: "${sample_id}_coverage_plot.png"
 
     input:
     tuple val(sample_id), path(depths), path(resistance_genes_bed)
@@ -323,7 +323,7 @@ process generate_low_coverage_bed {
 
     tag { sample_id }
     
-    publishDir params.versioned_outdir ? "${params.outdir}/${sample_id}/${params.pipeline_short_name}-v${params.pipeline_minor_version}-output" : "${params.outdir}/${sample_id}", mode: 'copy', pattern: "${sample_id}_low_coverage_regions.bed"
+    publishDir "${params.outdir}/${sample_id}", mode: 'copy', pattern: "${sample_id}_low_coverage_regions.bed"
     
     input:
     tuple val(sample_id), path(depths)
@@ -345,7 +345,7 @@ process calculate_gene_coverage {
 
     tag { sample_id }
     
-    publishDir params.versioned_outdir ? "${params.outdir}/${sample_id}/${params.pipeline_short_name}-v${params.pipeline_minor_version}-output" : "${params.outdir}/${sample_id}", mode: 'copy', pattern: "${sample_id}_resistance_gene_coverage.csv"
+    publishDir "${params.outdir}/${sample_id}", mode: 'copy', pattern: "${sample_id}_resistance_gene_coverage.csv"
 
     input:
     tuple val(sample_id), path(depths), path(resistance_genes_bed)
