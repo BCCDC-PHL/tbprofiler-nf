@@ -7,6 +7,7 @@ name: Pull Request
 jobs:
   test:
     strategy:
+      fail-fast: false
       matrix:
         nextflow_version: ["21.04.3", "23.10.1"]
     name: Run tests
@@ -14,7 +15,9 @@ jobs:
     steps:
     - uses: actions/checkout@master
     - name: create artifacts dir to save test logs
-      run: mkdir artifacts
+      env:
+        NXF_VER: ${{ matrix.nextflow_version }}
+      run: mkdir artifacts-nextflow-${NXF_VER}
     - name: Install Miniconda
       run: bash .github/scripts/install_conda.sh
     - name: Install Nextflow
@@ -32,6 +35,8 @@ jobs:
     - name: Upload Artifacts
       uses: actions/upload-artifact@v4
       if: always()
+      env:
+        NXF_VER: ${{ matrix.nextflow_version }}
       with:
-        name: test_artifacts
-        path: artifacts
+        name: artifacts-nextflow-${{ matrix.nextflow_version }}
+        path: artifacts-nextflow-${NXF_VER}
