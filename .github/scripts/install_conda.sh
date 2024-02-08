@@ -1,7 +1,7 @@
 #!/bin/bash
 set -eo pipefail
 
-echo "Install Miniconda .." >> artifacts/test_artifact.log
+echo "Install Miniconda .." >> artifacts/test.log
 
 export PATH=/opt/miniconda3/bin:$PATH
 

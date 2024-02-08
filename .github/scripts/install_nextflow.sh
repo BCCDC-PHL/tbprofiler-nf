@@ -2,7 +2,7 @@
 
 set -eo pipefail
 
-echo Install Nextflow .. >> artifacts/test_artifact.log
+echo Install Nextflow .. >> artifacts/test.log
 
 wget -qO- https://get.nextflow.io | bash
 
