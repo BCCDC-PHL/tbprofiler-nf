@@ -18,6 +18,8 @@ jobs:
     - name: Install Miniconda
       run: bash .github/scripts/install_conda.sh
     - name: Install Nextflow
+      env:
+        NXF_VER: ${{ matrix.nextflow_version }}
       run: bash .github/scripts/install_nextflow.sh
     - name: Create ART Read-Simulation Environment
       run: bash .github/scripts/create_art_environment.sh
