@@ -7,6 +7,8 @@ eval "$(conda shell.bash hook)"
 
 conda activate art
 
+mkdir -p .github/data/fastq
+
 art_illumina \
     --paired \
     --in .github/data/assemblies/NC_000962.3.fa \
