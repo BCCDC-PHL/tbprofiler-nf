@@ -1,7 +1,9 @@
 #!/bin/bash
 set -eo pipefail
 
-echo "Install Miniconda .." >> artifacts/test.log
+artifacts_dir="artifacts-nextflow-${NXF_VER}"
+
+echo "Install Miniconda .." >> ${artifacts_dir}/test.log
 
 export PATH=/opt/miniconda3/bin:$PATH
 

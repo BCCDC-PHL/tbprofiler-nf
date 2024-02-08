@@ -19,6 +19,8 @@ jobs:
         NXF_VER: ${{ matrix.nextflow_version }}
       run: mkdir artifacts-nextflow-${NXF_VER}
     - name: Install Miniconda
+      env:
+        NXF_VER: ${{ matrix.nextflow_version }}
       run: bash .github/scripts/install_conda.sh
     - name: Install Nextflow
       env:
