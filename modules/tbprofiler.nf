@@ -1,38 +1,38 @@
 process fastp {
 
-  tag { sample_id }
+    tag { sample_id }
 
-  publishDir params.versioned_outdir ? "${params.outdir}/${sample_id}/${params.pipeline_short_name}-v${params.pipeline_minor_version}-output" : "${params.outdir}/${sample_id}", pattern: "${sample_id}_fastp.{json,csv}", mode: 'copy'
+    publishDir params.versioned_outdir ? "${params.outdir}/${sample_id}/${params.pipeline_short_name}-v${params.pipeline_minor_version}-output" : "${params.outdir}/${sample_id}", pattern: "${sample_id}_fastp.{json,csv}", mode: 'copy'
 
-  input:
-  tuple val(sample_id), path(reads_1), path(reads_2)
+    input:
+    tuple val(sample_id), path(reads_1), path(reads_2)
 
-  output:
-  tuple val(sample_id), path("${sample_id}_fastp.json"), emit: fastp_json
-  tuple val(sample_id), path("${sample_id}_fastp.csv"), emit: fastp_csv
-  tuple val(sample_id), path("${sample_id}_trimmed_R1.fastq.gz"), path("${sample_id}_trimmed_R2.fastq.gz"), emit: reads
-  tuple val(sample_id), path("${sample_id}_fastp_provenance.yml"), emit: provenance
+    output:
+    tuple val(sample_id), path("${sample_id}_fastp.json"), emit: json
+    tuple val(sample_id), path("${sample_id}_fastp.csv"), emit: csv
+    tuple val(sample_id), path("${sample_id}_trimmed_R1.fastq.gz"), path("${sample_id}_trimmed_R2.fastq.gz"), emit: reads
+    tuple val(sample_id), path("${sample_id}_fastp_provenance.yml"), emit: provenance
 
-  script:
-  """
-  printf -- "- process_name: fastp\\n"  >> ${sample_id}_fastp_provenance.yml
-  printf -- "  tools:\\n"               >> ${sample_id}_fastp_provenance.yml
-  printf -- "    - tool_name: fastp\\n" >> ${sample_id}_fastp_provenance.yml
-  printf -- "      tool_version: \$(fastp --version 2>&1 | cut -d ' ' -f 2)\\n" >> ${sample_id}_fastp_provenance.yml
-  printf -- "      parameters:\\n"               >> ${sample_id}_fastp_provenance.yml
-  printf -- "        - parameter: --cut_tail\\n" >> ${sample_id}_fastp_provenance.yml
-  printf -- "          value: null\\n"           >> ${sample_id}_fastp_provenance.yml
+    script:
+    """
+    printf -- "- process_name: fastp\\n"  >> ${sample_id}_fastp_provenance.yml
+    printf -- "  tools:\\n"               >> ${sample_id}_fastp_provenance.yml
+    printf -- "    - tool_name: fastp\\n" >> ${sample_id}_fastp_provenance.yml
+    printf -- "      tool_version: \$(fastp --version 2>&1 | cut -d ' ' -f 2)\\n" >> ${sample_id}_fastp_provenance.yml
+    printf -- "      parameters:\\n"               >> ${sample_id}_fastp_provenance.yml
+    printf -- "        - parameter: --cut_tail\\n" >> ${sample_id}_fastp_provenance.yml
+    printf -- "          value: null\\n"           >> ${sample_id}_fastp_provenance.yml
 
-  fastp \
-    --cut_tail \
-    -i ${reads_1} \
-    -I ${reads_2} \
-    -o ${sample_id}_trimmed_R1.fastq.gz \
-    -O ${sample_id}_trimmed_R2.fastq.gz
+    fastp \
+	--cut_tail \
+	-i ${reads_1} \
+	-I ${reads_2} \
+	-o ${sample_id}_trimmed_R1.fastq.gz \
+	-O ${sample_id}_trimmed_R2.fastq.gz
 
-  mv fastp.json ${sample_id}_fastp.json
-  fastp_json_to_csv.py -s ${sample_id} ${sample_id}_fastp.json > ${sample_id}_fastp.csv
-  """
+    mv fastp.json ${sample_id}_fastp.json
+    fastp_json_to_csv.py -s ${sample_id} ${sample_id}_fastp.json > ${sample_id}_fastp.csv
+    """
 }
 
 
@@ -47,12 +47,16 @@ process tbprofiler {
     tuple val(sample_id), path(reads_1), path(reads_2)
 
     output:
-    tuple val(sample_id), path("${sample_id}_tbprofiler*.json"), emit: report_json
-    tuple val(sample_id), path("${sample_id}_tbprofiler*.csv"), emit: report_csv
-    tuple val(sample_id), path("${sample_id}_tbprofiler*.{bam,bam.bai}"), emit: alignment
-    tuple val(sample_id), path("${sample_id}_tbprofiler_targets.vcf"), emit: targets_vcf
-    tuple val(sample_id), path("${sample_id}_tbprofiler_whole_genome.vcf"), emit: whole_genome_vcf
-    tuple val(sample_id), path("${sample_id}_tbprofiler_provenance.yml"), emit: provenance
+    tuple val(sample_id), path("${sample_id}_tbprofiler*.json"),                    emit: report_json
+    tuple val(sample_id), path("${sample_id}_tbprofiler_full_report.csv"),          emit: full_report_csv
+    tuple val(sample_id), path("${sample_id}_tbprofiler_lineage.csv"),              emit: lineage_csv
+    tuple val(sample_id), path("${sample_id}_tbprofiler_resistance.csv"),           emit: resistance_csv
+    tuple val(sample_id), path("${sample_id}_tbprofiler_resistance_mutations.csv"), emit: resistance_mutations_csv
+    tuple val(sample_id), path("${sample_id}_tbprofiler_summary.csv"),              emit: summary_csv
+    tuple val(sample_id), path("${sample_id}_tbprofiler*.{bam,bam.bai}"),           emit: alignment
+    tuple val(sample_id), path("${sample_id}_tbprofiler_targets.vcf"),              emit: targets_vcf
+    tuple val(sample_id), path("${sample_id}_tbprofiler_whole_genome.vcf"),         emit: whole_genome_vcf
+    tuple val(sample_id), path("${sample_id}_tbprofiler_provenance.yml"),           emit: provenance
     
     script:
     """
@@ -86,38 +90,35 @@ process tbprofiler {
     split_tbprofiler_csv.py -p ${sample_id} -s ${sample_id} ${sample_id}_tbprofiler_full_report.csv
     
 
-    printf -- "- process_name: tbprofiler\\n" > ${sample_id}_tbprofiler_provenance.yml
-    printf -- "  tools:\\n"               >> ${sample_id}_tbprofiler_provenance.yml
-    printf -- "    - tool_name: tb-profiler\\n" >> ${sample_id}_tbprofiler_provenance.yml
+    printf -- "- process_name: tbprofiler\\n"                  >> ${sample_id}_tbprofiler_provenance.yml
+    printf -- "  tools:\\n"                                    >> ${sample_id}_tbprofiler_provenance.yml
+    printf -- "    - tool_name: tb-profiler\\n"                >> ${sample_id}_tbprofiler_provenance.yml
     printf -- "      tool_version: \$(tb-profiler profile --version 2>&1 | cut -d ' ' -f 3)\\n" >> ${sample_id}_tbprofiler_provenance.yml
-    printf -- "      subcommand: profile\\n" >> ${sample_id}_tbprofiler_provenance.yml
-    printf -- "      parameters:\\n"               >> ${sample_id}_tbprofiler_provenance.yml
-    printf -- "        - parameter: --platform\\n" >> ${sample_id}_tbprofiler_provenance.yml
-    printf -- "          value: ${params.platform}\\n"           >> ${sample_id}_tbprofiler_provenance.yml
+    printf -- "      subcommand: profile\\n"                   >> ${sample_id}_tbprofiler_provenance.yml
+    printf -- "      parameters:\\n"                           >> ${sample_id}_tbprofiler_provenance.yml
+    printf -- "        - parameter: --platform\\n"             >> ${sample_id}_tbprofiler_provenance.yml
+    printf -- "          value: ${params.platform}\\n"         >> ${sample_id}_tbprofiler_provenance.yml
 
-    printf -- "        - parameter: --mapper\\n" >> ${sample_id}_tbprofiler_provenance.yml
+    printf -- "        - parameter: --mapper\\n"               >> ${sample_id}_tbprofiler_provenance.yml
     printf -- "          value: ${params.mapper}\\n"           >> ${sample_id}_tbprofiler_provenance.yml
 
-    printf -- "        - parameter: --caller\\n" >> ${sample_id}_tbprofiler_provenance.yml
+    printf -- "        - parameter: --caller\\n"               >> ${sample_id}_tbprofiler_provenance.yml
     printf -- "          value: ${params.caller}\\n"           >> ${sample_id}_tbprofiler_provenance.yml
 
-    printf -- "        - parameter: --af\\n" >> ${sample_id}_tbprofiler_provenance.yml
-    printf -- "          value: ${params.min_af_used_for_calling}\\n"           >> ${sample_id}_tbprofiler_provenance.yml
+    printf -- "        - parameter: --af\\n"                   >> ${sample_id}_tbprofiler_provenance.yml
+    printf -- "          value: ${params.min_af_used_for_calling}\\n" >> ${sample_id}_tbprofiler_provenance.yml
 
-    printf -- "        - parameter: --reporting_af\\n" >> ${sample_id}_tbprofiler_provenance.yml
-    printf -- "          value: ${params.min_af_used_for_prediction}\\n"           >> ${sample_id}_tbprofiler_provenance.yml
+    printf -- "        - parameter: --reporting_af\\n"         >> ${sample_id}_tbprofiler_provenance.yml
+    printf -- "          value: ${params.min_af_used_for_prediction}\\n" >> ${sample_id}_tbprofiler_provenance.yml
 
-    printf -- "        - parameter: --prefix\\n" >> ${sample_id}_tbprofiler_provenance.yml
-    printf -- "          value: ${sample_id}\\n"           >> ${sample_id}_tbprofiler_provenance.yml
+    printf -- "        - parameter: --prefix\\n"               >> ${sample_id}_tbprofiler_provenance.yml
+    printf -- "          value: ${sample_id}\\n"               >> ${sample_id}_tbprofiler_provenance.yml
 
-    printf -- "        - parameter: --csv\\n" >> ${sample_id}_tbprofiler_provenance.yml
-    printf -- "          value: null\\n"           >> ${sample_id}_tbprofiler_provenance.yml
+    printf -- "        - parameter: --csv\\n"                  >> ${sample_id}_tbprofiler_provenance.yml
+    printf -- "          value: null\\n"                       >> ${sample_id}_tbprofiler_provenance.yml
 
-    printf -- "        - parameter: --call_whole_genome\\n" >> ${sample_id}_tbprofiler_provenance.yml
-    printf -- "          value: null\\n"           >> ${sample_id}_tbprofiler_provenance.yml
-
-
-
+    printf -- "        - parameter: --call_whole_genome\\n"    >> ${sample_id}_tbprofiler_provenance.yml
+    printf -- "          value: null\\n"                       >> ${sample_id}_tbprofiler_provenance.yml
     """
 }
 
@@ -215,7 +216,6 @@ process snpit {
     printf -- "      parameters:\\n"               >> ${sample_id}_snpit_provenance.yml
     printf -- "        - parameter: --input\\n"    >> ${sample_id}_snpit_provenance.yml
     printf -- "          value: ${vcf}\\n"         >> ${sample_id}_snpit_provenance.yml
-
     """
 }
 
@@ -258,7 +258,7 @@ process mpileup {
     script:
     """
     samtools faidx ${ref}
-
+    
     printf "chrom\tpos\tref\tdepth\n" > ${sample_id}_depths.tsv
 
     samtools mpileup -a \
@@ -282,41 +282,39 @@ process mpileup {
 
     printf -- "        - parameter: --count-orphans\\n" >> ${sample_id}_mpileup_provenance.yml
     printf -- "          value: null\\n"                >> ${sample_id}_mpileup_provenance.yml
-
-
     """
 }
 
 
 process plot_coverage {
-
+    
     tag { sample_id }
-
+    
     conda "$baseDir/environments/seaborn.yml"
-
+    
     publishDir params.versioned_outdir ? "${params.outdir}/${sample_id}/${params.pipeline_short_name}-v${params.pipeline_minor_version}-output" : "${params.outdir}/${sample_id}", mode: 'copy', pattern: "${sample_id}_coverage_plot.png"
 
     input:
     tuple val(sample_id), path(depths), path(resistance_genes_bed)
-
+    
     output:
     tuple val(sample_id), path("${sample_id}_coverage_plot.png")
 
     script:
     """
     if [ ${params.rename_ref} == "true" ]; then
-      sed s/'Chromosome'/'${params.ref_name}'/ ${resistance_genes_bed} > genes.bed
+        sed s/'Chromosome'/'${params.ref_name}'/ ${resistance_genes_bed} > genes.bed
     else
-      cp ${resistance_genes_bed} genes.bed
+        cp ${resistance_genes_bed} genes.bed
     fi
     plot_coverage.py \
-      --input ${depths} \
-      --sample-id ${sample_id} \
-      --threshold ${params.min_depth} \
-      --log-scale \
-      --rolling-window 100 \
-      --y-limit 500 \
-      --genes genes.bed
+	--input ${depths} \
+	--sample-id ${sample_id} \
+	--threshold ${params.min_depth} \
+	--log-scale \
+	--rolling-window 100 \
+	--y-limit 500 \
+	--genes genes.bed
     """
 }
 
@@ -324,9 +322,9 @@ process plot_coverage {
 process generate_low_coverage_bed {
 
     tag { sample_id }
-
+    
     publishDir params.versioned_outdir ? "${params.outdir}/${sample_id}/${params.pipeline_short_name}-v${params.pipeline_minor_version}-output" : "${params.outdir}/${sample_id}", mode: 'copy', pattern: "${sample_id}_low_coverage_regions.bed"
-
+    
     input:
     tuple val(sample_id), path(depths)
 
@@ -336,9 +334,9 @@ process generate_low_coverage_bed {
     script:
     """
     generate_low_coverage_bed.py \
-      --input ${depths} \
-      --threshold ${params.min_depth} \
-      > ${sample_id}_low_coverage_regions.bed
+	--input ${depths} \
+	--threshold ${params.min_depth} \
+	> ${sample_id}_low_coverage_regions.bed
     """
 }
 
@@ -346,7 +344,7 @@ process generate_low_coverage_bed {
 process calculate_gene_coverage {
 
     tag { sample_id }
-
+    
     publishDir params.versioned_outdir ? "${params.outdir}/${sample_id}/${params.pipeline_short_name}-v${params.pipeline_minor_version}-output" : "${params.outdir}/${sample_id}", mode: 'copy', pattern: "${sample_id}_resistance_gene_coverage.csv"
 
     input:
@@ -358,10 +356,9 @@ process calculate_gene_coverage {
     script:
     """
     calculate_res_gene_depth_qc.py \
-      --bed ${resistance_genes_bed} \
-      --depth ${depths} \
-      --threshold ${params.min_depth} \
-      --output ${sample_id}_resistance_gene_coverage.csv
+	--bed ${resistance_genes_bed} \
+	--depth ${depths} \
+	--threshold ${params.min_depth} \
+	--output ${sample_id}_resistance_gene_coverage.csv
     """
 }
-

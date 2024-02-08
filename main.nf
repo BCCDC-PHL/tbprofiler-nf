@@ -24,8 +24,7 @@ include { collect_provenance }             from './modules/provenance.nf'
 
 workflow {
 
-
-  ch_workflow_metadata = Channel.value([
+    ch_workflow_metadata = Channel.value([
 	workflow.sessionId,
 	workflow.runName,
 	workflow.manifest.name,
@@ -33,33 +32,33 @@ workflow {
 	workflow.start,
     ])
 
-  if (params.samplesheet_input != 'NO_FILE') {
-    ch_fastq = Channel.fromPath(params.samplesheet_input).splitCsv(header: true).map{ it -> [it['ID'], it['R1'], it['R2']] }
-  } else {
-    ch_fastq = Channel.fromFilePairs( params.fastq_search_path, flat: true ).map{ it -> [it[0].split('_')[0], it[1], it[2]] }.unique{ it -> it[0] }
-  }
+    if (params.samplesheet_input != 'NO_FILE') {
+	ch_fastq = Channel.fromPath(params.samplesheet_input).splitCsv(header: true).map{ it -> [it['ID'], it['R1'], it['R2']] }
+    } else {
+	ch_fastq = Channel.fromFilePairs( params.fastq_search_path, flat: true ).map{ it -> [it[0].split('_')[0], it[1], it[2]] }.unique{ it -> it[0] }
+    }
 
-  ch_resistance_genes_bed = Channel.fromPath("${baseDir}/assets/resistance_genes.bed")
+    ch_resistance_genes_bed = Channel.fromPath("${baseDir}/assets/resistance_genes.bed")
 
-  main:
+    main:
 
     hash_files(ch_fastq.map{ it -> [it[0], [it[1], it[2]]] }.combine(Channel.of("fastq-input")))
 
     fastp(ch_fastq)
-
+    
     tbprofiler(fastp.out.reads)
 
     if (params.rename_ref) {
-      ch_ref = Channel.fromPath("${baseDir}/assets/NC_000962.3.fa")
-      rename_ref_in_alignment(tbprofiler.out.alignment)
-      rename_ref_in_targets_variants(tbprofiler.out.targets_vcf)
-      rename_ref_in_whole_genome_variants(tbprofiler.out.whole_genome_vcf)
-      ch_alignment = rename_ref_in_alignment.out
-      ch_whole_genome_variants = rename_ref_in_whole_genome_variants.out
+	ch_ref = Channel.fromPath("${baseDir}/assets/NC_000962.3.fa")
+	rename_ref_in_alignment(tbprofiler.out.alignment)
+	rename_ref_in_targets_variants(tbprofiler.out.targets_vcf)
+	rename_ref_in_whole_genome_variants(tbprofiler.out.whole_genome_vcf)
+	ch_alignment = rename_ref_in_alignment.out
+	ch_whole_genome_variants = rename_ref_in_whole_genome_variants.out
     } else {
-      ch_ref = Channel.fromPath("${baseDir}/assets/tbdb_genome.fa")
-      ch_alignment = tbprofiler.out.alignment
-      ch_whole_genome_variants = tbprofiler.out.whole_genome_vcf
+	ch_ref = Channel.fromPath("${baseDir}/assets/tbdb_genome.fa")
+	ch_alignment = tbprofiler.out.alignment
+	ch_whole_genome_variants = tbprofiler.out.whole_genome_vcf
     }
 
     snpit(ch_whole_genome_variants)
@@ -77,6 +76,41 @@ workflow {
     generate_low_coverage_bed(ch_depths)
     
     calculate_gene_coverage(ch_depths.combine(ch_resistance_genes_bed))
+
+    if (params.collect_outputs) {
+	fastp.out.csv.map{ it -> it[1] }.collectFile(
+	    name: params.collected_outputs_prefix + "_fastp.csv",
+	    storeDir: params.outdir,
+	    keepHeader: true,
+	    sort: { it -> it.readLines()[1].split(',')[0] }
+	)
+	check_snpit_against_tbprofiler.out.map{ it -> it[1] }.collectFile(
+	    name: params.collected_outputs_prefix + "_snpit.tsv",
+	    storeDir: params.outdir,
+	    keepHeader: true,
+	    newLine: true,
+	    sort: { it -> it.readLines()[1].split('\\t')[0] }
+	)
+	tbprofiler.out.resistance_mutations_csv.map{ it -> it[1] }.collectFile(
+	    name: params.collected_outputs_prefix + "_tbprofiler_resistance_mutations.csv",
+	    storeDir: params.outdir,
+	    keepHeader: true,
+	    sort: { it -> it.readLines()[1].split(',')[0..1].join('-') }
+	)
+	tbprofiler.out.summary_csv.map{ it -> it[1] }.collectFile(
+	    name: params.collected_outputs_prefix + "_tbprofiler_summary.csv",
+	    storeDir: params.outdir,
+	    keepHeader: true,
+	    sort: { it -> it.readLines()[1].split(',')[0] }
+	)
+	qualimap_bamqc.out.genome_results.map{ it -> it[1] }.collectFile(
+	    name: params.collected_outputs_prefix + "_qualimap_alignment_qc.csv",
+	    storeDir: params.outdir,
+	    keepHeader: true,
+	    sort: { it -> it.readLines()[1].split(',')[0] }
+	)
+	
+    }
     
     // Collect Provenance
     // The basic idea is to build up a channel with the following structure:
