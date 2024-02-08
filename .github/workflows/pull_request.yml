@@ -1,0 +1,18 @@
+on:
+  pull_request:
+    branches:
+    - master
+name: Pull Request
+jobs:
+  test:
+    name: Run tests
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@master
+    - name: create artifacts dir to save test logs
+      run: mkdir artifacts
+    - name: Install Miniconda
+      run: bash .github/scripts/install_conda.sh
+    - name: Install Nextflow
+      run: bash .github/scripts/install_nextflow.sh
+      
