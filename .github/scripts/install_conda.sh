@@ -18,5 +18,3 @@ conda update -n base -c defaults conda
 conda install -y -c conda-forge mamba
 
 conda init bash
-
-source ~/.bashrc
