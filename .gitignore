@@ -3,6 +3,7 @@
 .github/data/assemblies
 .github/data/fastq
 .github/data/test_output
+.github/data/pipeline-provenance.json
 artifacts
 work
 test_input
