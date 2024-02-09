@@ -50,5 +50,5 @@ jobs:
       env:
         NXF_VER: ${{ matrix.nextflow_version }}
       with:
-        name: artifacts-BCCDC-PHL-tbprofiler-nf-nextflow-v${{ matrix.nextflow_version }}-${{ github.run_id }}.${{ env.GITHUB_RUN_ATTEMPT }}
+        name: artifacts-BCCDC-PHL-tbprofiler-nf-nextflow-v${{ matrix.nextflow_version }}-${{ github.run_id }}.${{ github.run_attempt }}
         path: artifacts
