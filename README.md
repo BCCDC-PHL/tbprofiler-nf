@@ -1,4 +1,4 @@
-[![Tests](https://github.com/BCCDC-PHL/tbprofiler-nf/actions/workflows/pull_request.yml/badge.svg)](https://github.com/BCCDC-PHL/tbprofiler-nf/actions/workflows/pull_request.yml)
+[![Tests](https://github.com/BCCDC-PHL/tbprofiler-nf/actions/workflows/tests.yml/badge.svg)](https://github.com/BCCDC-PHL/tbprofiler-nf/actions/workflows/tests.yml)
 
 # TBProfiler-NF: A Nextflow Wrapper for the TBProfiler Mycobacteria Genomics Analysis Tool
 
