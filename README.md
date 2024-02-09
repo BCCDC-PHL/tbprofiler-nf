@@ -1,3 +1,5 @@
+[![Tests](https://github.com/BCCDC-PHL/tbprofiler-nf/actions/workflows/pull_request.yml/badge.svg)](https://github.com/BCCDC-PHL/tbprofiler-nf/actions/workflows/pull_request.yml)
+
 # TBProfiler-NF: A Nextflow Wrapper for the TBProfiler Mycobacteria Genomics Analysis Tool
 
 This is a Nextflow-based wrapper for the [TBProfiler](https://github.com/jodyphelan/TBProfiler) pipeline for antimicrobial resistance (AMR)
