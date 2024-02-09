@@ -1,6 +1,6 @@
 #!/bin/bash
 
-artifacts_dir="artifacts-nextflow-${NXF_VER}"
+artifacts_dir="artifacts"
 
 echo "Prepare artifacts .." >> ${artifacts_dir}/test.log
 

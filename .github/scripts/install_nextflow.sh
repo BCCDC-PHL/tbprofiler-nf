@@ -2,7 +2,7 @@
 
 set -eo pipefail
 
-artifacts_dir="artifacts-nextflow-${NXF_VER}"
+artifacts_dir="artifacts"
 
 echo Install Nextflow .. >> ${artifacts_dir}/test.log
 

@@ -43,5 +43,5 @@ jobs:
       env:
         NXF_VER: ${{ matrix.nextflow_version }}
       with:
-        name: artifacts-nextflow-${{ matrix.nextflow_version }}
-        path: artifacts-nextflow-${NXF_VER}
+        name: artifacts-nextflow-${{ matrix.nextflow_version }}-${{ env.RUN_UNIQUE_ID }}
+        path: artifacts
