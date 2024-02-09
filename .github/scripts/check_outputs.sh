@@ -1,7 +1,5 @@
 #!/usr/bin/env bash
 
-set -eo pipefail
-
 source ${HOME}/.bashrc
 
 eval "$(conda shell.bash hook)"
