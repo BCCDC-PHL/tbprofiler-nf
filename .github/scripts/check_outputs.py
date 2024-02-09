@@ -35,11 +35,12 @@ def check_expected_mutations(resistance_mutations_files, expected_mutations_by_s
             reader = csv.DictReader(f)
             for row in reader:
                 sample_id = row['sample_id']
+                gene = row['gene']
                 mutation = row['mutation']
                 if sample_id not in found_mutations_by_sample:
                     found_mutations_by_sample[sample_id] = set([])
                 if mutation != '':
-                    found_mutations_by_sample[sample_id].add(mutation)
+                    found_mutations_by_sample[sample_id].add(':'.join([gene, mutation]))
 
     for sample_id, expected_mutations in expected_mutations_by_sample_id.items():
         if sample_id not in found_mutations_by_sample:
@@ -67,7 +68,15 @@ def main(args):
 
     expected_mutations_by_sample_id = {
         'NC000962.3': set([]),
-    }
+        'ERR1664619': set([
+            'inhA:p.Ile194Thr',
+            'embA:c.-16C>T',
+            'embB:p.Met306Val',
+            'embB:p.Met423Thr',
+            'gyrA:p.Asp94Ala',
+            'rrs:n.1401A>G',
+        ]),                  
+    }       
 
     tests = [
         {

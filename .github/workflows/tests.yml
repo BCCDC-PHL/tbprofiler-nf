@@ -33,6 +33,8 @@ jobs:
       run: bash .github/scripts/create_art_environment.sh
     - name: Download Assemblies
       run: bash .github/scripts/download_assemblies.sh
+    - name: Apply Variants
+      run: bash .github/scripts/apply_variants.sh
     - name: Simulate Reads
       run: bash .github/scripts/simulate_reads.sh
     - name: Run Pipeline
