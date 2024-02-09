@@ -8,4 +8,6 @@ mkdir -p ${artifacts_dir}/fastq
 
 mv .github/data/fastq/*.fastq.gz ${artifacts_dir}/fastq
 
-ls -lh ${artifacts_dir}/*
+mkdir -p ${artifacts_dir}/pipeline_outputs
+
+mv .github/data/test_output/* ${artifacts_dir}/pipeline_outputs
