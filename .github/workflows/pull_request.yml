@@ -17,7 +17,7 @@ jobs:
     - name: create artifacts dir to save test logs
       env:
         NXF_VER: ${{ matrix.nextflow_version }}
-      run: mkdir artifacts-nextflow-${NXF_VER}
+      run: mkdir artifacts
     - name: Install Miniconda
       env:
         NXF_VER: ${{ matrix.nextflow_version }}
