@@ -25,7 +25,7 @@ def check_provenance_format_valid(provenance_files, schema):
     return True
 
 
-def check_expected_mutations(resistance_mutations_files, expected_mutations_by_sample):
+def check_expected_mutations(resistance_mutations_files, expected_mutations_by_sample_id):
     """
     Check that the resistance mutations files contain the expected mutations.
     """
@@ -36,12 +36,12 @@ def check_expected_mutations(resistance_mutations_files, expected_mutations_by_s
             for row in reader:
                 sample_id = row['sample_id']
                 mutation = row['mutation']
+                if sample_id not in found_mutations_by_sample:
+                    found_mutations_by_sample[sample_id] = set([])
                 if mutation != '':
-                    if sample_id not in found_mutations_by_sample:
-                        found_mutations_by_sample[sample_id] = set([])
                     found_mutations_by_sample[sample_id].add(mutation)
 
-    for sample_id, expected_mutations in expected_mutations_by_sample.items():
+    for sample_id, expected_mutations in expected_mutations_by_sample_id.items():
         if sample_id not in found_mutations_by_sample:
             return False
         if expected_mutations != found_mutations_by_sample[sample_id]:
@@ -64,10 +64,11 @@ def main(args):
 
     resistance_mutations_files_glob = f"{args.pipeline_outdir}/**/*tbprofiler_resistance_mutations.csv"
     resistance_mutations_files = glob.glob(resistance_mutations_files_glob, recursive=True)
-    
-    expected_mutations_by_sample = {
+
+    expected_mutations_by_sample_id = {
         'NC000962.3': set([]),
     }
+
     tests = [
         {
             "test_name": "provenance_format_valid",
@@ -75,7 +76,7 @@ def main(args):
         },
         {
             "test_name": "expected_mutations",
-            "test_passed": check_expected_mutations(resistance_mutations_files, expected_mutations_by_sample),
+            "test_passed": check_expected_mutations(resistance_mutations_files, expected_mutations_by_sample_id),
         },
     ]
 
