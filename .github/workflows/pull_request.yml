@@ -34,8 +34,10 @@ jobs:
       run: bash .github/scripts/simulate_reads.sh
     - name: Run Pipeline
       run: bash .github/scripts/run_pipeline.sh
+    - name: Create Output Checking Environment
+      run: bash .github/scripts/create_output_checking_environment.sh
     - name: Check Outputs
-      run: .github/scripts/check_outputs.py --pipeline-outdir .github/data/test_output
+      run: .github/scripts/check_outputs.sh
     - name: Prepare Artifacts
       if: always()
       run: bash .github/scripts/prepare_artifacts.sh

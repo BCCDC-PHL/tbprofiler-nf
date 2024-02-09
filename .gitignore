@@ -1,5 +1,9 @@
 *~
 .nextflow*
+.github/data/assemblies
+.github/data/fastq
+.github/data/test_output
+artifacts
 work
 test_input
 test_output
