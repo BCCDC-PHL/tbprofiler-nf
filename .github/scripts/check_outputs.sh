@@ -8,5 +8,3 @@ conda activate check-outputs
 
 
 .github/scripts/check_outputs.py --pipeline-outdir .github/data/test_output -o artifacts/check_outputs_results.csv
-
-grep -v 'FAIL' artifacts/check_outputs_results.csv
