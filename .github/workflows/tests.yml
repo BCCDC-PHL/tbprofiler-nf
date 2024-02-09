@@ -17,13 +17,9 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@master
-    - name: create artifacts dir to save test logs
-      env:
-        NXF_VER: ${{ matrix.nextflow_version }}
+    - name: Create Artifacts Directory
       run: mkdir artifacts
     - name: Install Miniconda
-      env:
-        NXF_VER: ${{ matrix.nextflow_version }}
       run: bash .github/scripts/install_conda.sh
     - name: Install Nextflow
       env:
@@ -49,8 +45,6 @@ jobs:
     - name: Upload Artifacts
       uses: actions/upload-artifact@v4
       if: always()
-      env:
-        NXF_VER: ${{ matrix.nextflow_version }}
       with:
         name: artifacts-BCCDC-PHL-tbprofiler-nf-nextflow-v${{ matrix.nextflow_version }}-${{ github.run_id }}.${{ github.run_attempt }}
         path: artifacts
