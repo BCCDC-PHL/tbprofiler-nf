@@ -66,7 +66,7 @@ process tbprofiler {
       --platform ${params.platform} \
       --mapper ${params.mapper} \
       --caller ${params.caller} \
-      --min_depth ${params.min_depth} \
+      --depth ${params.min_depth} \
       --af ${params.min_af_used_for_calling} \
       --reporting_af ${params.min_af_used_for_prediction} \
       --read1 ${reads_1} \
@@ -78,7 +78,7 @@ process tbprofiler {
     mv bam/${sample_id}.bam ./${sample_id}_tbprofiler.bam
     mv bam/${sample_id}.bam.bai ./${sample_id}_tbprofiler.bam.bai
 
-    mv vcf/${sample_id}.targets.csq.vcf.gz ./${sample_id}_tbprofiler_targets.vcf.gz
+    mv vcf/${sample_id}.targets.vcf.gz ./${sample_id}_tbprofiler_targets.vcf.gz
     gunzip ./${sample_id}_tbprofiler_targets.vcf.gz
 
     mv vcf/${sample_id}.vcf.gz ./${sample_id}_tbprofiler_whole_genome.vcf.gz
