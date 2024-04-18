@@ -68,7 +68,6 @@ process tbprofiler {
       --caller ${params.caller} \
       --depth ${params.min_depth} \
       --af ${params.min_af_used_for_calling} \
-      --reporting_af ${params.min_af_used_for_prediction} \
       --read1 ${reads_1} \
       --read2 ${reads_2} \
       --prefix ${sample_id} \
