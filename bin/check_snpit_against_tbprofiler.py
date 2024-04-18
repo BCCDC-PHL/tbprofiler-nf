@@ -51,10 +51,10 @@ def main(args):
             snpit_results['Percentage'] = 'N/A'
     elif snpit_results['Percentage'] != 'N/A' and snpit_results['Percentage'] < args.min_snpit_percentage:
         tbprofiler_report = json.load(open(args.tbprofiler_report))
-        pct_reads_mapped = tbprofiler_report['qc']['pct_reads_mapped']
-        if tbprofiler_report['main_lin'] == 'lineage4' and pct_reads_mapped >= args.min_percent_reads_mapped:
+        pct_reads_mapped = tbprofiler_report['qc']['percent_reads_mapped']
+        if tbprofiler_report['main_lineage'] == 'lineage4' and pct_reads_mapped >= args.min_percent_reads_mapped:
             snpit_results['Species'] = 'M. tuberculosis'
-            snpit_results['Lineage'] = tbprofiler_report['main_lin'].replace('lineage', 'Lineage ')
+            snpit_results['Lineage'] = tbprofiler_report['main_lineage'].replace('lineage', 'Lineage ')
             snpit_results['Name'] = 'N/A'
             snpit_results['Percentage'] = 'N/A'
         
