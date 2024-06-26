@@ -8,4 +8,3 @@ dependencies:
   - fastp=0.23.2
   - tb-profiler=6.2.1
   - qualimap=2.2.2d
-  - pathogen-profiler=4.2.0
