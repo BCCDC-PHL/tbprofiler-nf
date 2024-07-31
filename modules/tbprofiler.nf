@@ -84,7 +84,7 @@ process tbprofiler {
     gunzip ./${sample_id}_tbprofiler_whole_genome.vcf.gz
 
     cp results/${sample_id}.results.csv ${sample_id}_tbprofiler_full_report.csv
-    cp results/${sample_id}.results.json ${sample_id}_tbprofiler_full_report.json
+    cat results/${sample_id}.results.json | python -m json.tool > ${sample_id}_tbprofiler_full_report.json
 
     split_tbprofiler_csv.py -p ${sample_id} -s ${sample_id} ${sample_id}_tbprofiler_full_report.csv
     
