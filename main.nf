@@ -7,6 +7,7 @@ nextflow.enable.dsl = 2
 include { hash_files }                     from './modules/hash_files.nf'
 include { fastp }                          from './modules/tbprofiler.nf'
 include { tbprofiler }                     from './modules/tbprofiler.nf'
+include { adjust_tbprofiler_resistance_predictions }                       from './modules/tbprofiler.nf'
 include { snpit }                          from './modules/tbprofiler.nf'
 include { check_snpit_against_tbprofiler } from './modules/tbprofiler.nf'
 include { rename_ref_in_alignment }        from './modules/tbprofiler.nf'
@@ -47,6 +48,12 @@ workflow {
     fastp(ch_fastq)
     
     tbprofiler(fastp.out.reads)
+
+    if (params.adjust_tbprofiler_resistance_predictions) {
+	ch_who_mutation_catalogue = Channel.fromPath("${baseDir}/assets/WHO-UCN-TB-2023.6-eng_catalogue_master_file.txt")
+	ch_tbprofiler_outputs = tbprofiler.out.resistance_csv.join(tbprofiler.out.resistance_mutations_csv).join(tbprofiler.out.report_json)
+	adjust_tbprofiler_resistance_predictions(ch_tbprofiler_outputs.combine(ch_who_mutation_catalogue))
+    }
 
     if (params.rename_ref) {
 	ch_ref = Channel.fromPath("${baseDir}/assets/NC_000962.3.fa")

@@ -121,6 +121,35 @@ process tbprofiler {
     """
 }
 
+
+process adjust_tbprofiler_resistance_predictions {
+
+    tag { sample_id }
+
+    publishDir "${params.outdir}/${sample_id}", mode: 'copy', pattern: "${sample_id}_tbprofiler_resistance_*adjusted.csv"
+
+    input:
+    tuple val(sample_id), path(tbprofiler_resistance_csv), path(tbprofiler_resistance_mutations_csv), path(tbprofiler_full_report_json), path(who_mutation_catalogue)
+
+    output:
+    tuple val(sample_id), path("${sample_id}_tbprofiler_resistance_adjusted.csv"), emit: adjusted_resistance_csv
+    tuple val(sample_id), path("${sample_id}_tbprofiler_resistance_mutations_adjusted.csv"), emit: adjusted_resistance_mutations_csv
+
+    script:
+    """
+    adjust_tbprofiler_resistance_predictions.py \
+	--sample-id ${sample_id} \
+	--input-tbprofiler-resistance-mutations ${tbprofiler_resistance_mutations_csv} \
+	--input-tbprofiler-resistance-predictions ${tbprofiler_resistance_csv} \
+	--input-tbprofiler-full-report ${tbprofiler_full_report_json} \
+	--input-who-mutation-catalogue ${who_mutation_catalogue} \
+	--output-adjusted-resistance-mutations ${sample_id}_tbprofiler_resistance_mutations_adjusted.csv \
+	--output-adjusted-resistance-predictions ${sample_id}_tbprofiler_resistance_adjusted.csv
+	
+    """
+}
+
+
 process rename_ref_in_alignment {
 
   tag { sample_id }
