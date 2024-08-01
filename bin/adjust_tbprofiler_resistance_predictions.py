@@ -42,7 +42,7 @@ def parse_tbprofiler_resistance_predictions(input_file: Path) -> dict:
             if row['genotypic_resistance'] == 'R':
                 row['tbprofiler_resistance_prediction'] = 'Predicted Resistant'
             elif row['genotypic_resistance'] == '':
-                row['tbprofiler_resistance_prediction'] = 'Predicted Sensitive'
+                row['tbprofiler_resistance_prediction'] = ''
             if drug not in tbprofiler_resistance_prediction_by_drug:
                 tbprofiler_resistance_prediction_by_drug[drug] = row
 
@@ -793,7 +793,7 @@ def main(args):
             if combined_all_ppv >= ppv_threshold:
                 output_row['adjusted_resistance_prediction'] = 'Predicted Resistant'
             else:
-                output_row['adjusted_resistance_prediction'] = 'Predicted Sensitive'
+                output_row['adjusted_resistance_prediction'] = 'Predicted Susceptible'
         else:
             output_row['adjusted_resistance_prediction'] = 'Prediction Undetermined'
             
