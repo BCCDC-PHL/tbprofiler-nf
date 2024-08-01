@@ -602,6 +602,8 @@ def main(args):
     tbprofiler_resistance_prediction_by_drug = parse_tbprofiler_resistance_predictions(args.input_tbprofiler_resistance_predictions)
 
     tbprofiler_full_report = parse_tbprofiler_full_report(args.input_tbprofiler_full_report)
+    tbprofiler_version = tbprofiler_full_report.get('pipeline', {}).get('software_version', None)
+    tbdb_commit = tbprofiler_full_report.get('pipeline', {}).get('db_version', {}).get('commit', None)
 
     tbprofiler_full_report_resistance_variants = tbprofiler_full_report.get('dr_variants', [])
 
@@ -621,6 +623,8 @@ def main(args):
                 indexed_tbprofiler_full_report_other_variants[drug][gene] = {}
             mutation = formatted_variant['mutation']
             formatted_variant = collect_catalogue_info_for_mutation(formatted_variant, indexed_catalogue, drug)
+            formatted_variant['tbprofiler_version'] = tbprofiler_version
+            formatted_variant['tbdb_commit'] = tbdb_commit
             indexed_tbprofiler_full_report_other_variants[drug][gene][mutation] = formatted_variant
 
     tbprofiler_other_variants_by_drug = {}
@@ -675,6 +679,8 @@ def main(args):
         'tbprofiler_confidence',
         'tbprofiler_source',
         'tbprofiler_comment',
+        'tbprofiler_version',
+        'tbdb_commit',
     ]
 
     rounded_fields = [
@@ -693,6 +699,8 @@ def main(args):
                     if field in mutation:
                         mutation[field] = round(mutation[field], 6)
                 mutation['sample_id'] = args.sample_id
+                mutation['tbprofiler_version'] = tbprofiler_version
+                mutation['tbdb_commit'] = tbdb_commit
                 writer.writerow(mutation)
 
         for drug, tbprofiler_other_variants in tbprofiler_other_variants_by_drug.items():
@@ -717,6 +725,8 @@ def main(args):
         'ppv_threshold',
         'tbprofiler_resistance_prediction',
         'adjusted_resistance_prediction',
+        'tbprofiler_version',
+        'tbdb_commit',
     ]
 
     rounded_fields = [
@@ -760,6 +770,8 @@ def main(args):
             'combined_resistance_mutation_ppvs': combined_resistance_ppv,
             'ppv_threshold': ppv_threshold,
             'tbprofiler_resistance_prediction': tbprofiler_resistance_prediction,
+            'tbprofiler_version': tbprofiler_version,
+            'tbdb_commit': tbdb_commit,
         }
         if ppv_threshold is not None:
             if combined_all_ppv >= ppv_threshold:
