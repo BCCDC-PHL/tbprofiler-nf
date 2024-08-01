@@ -477,7 +477,7 @@ def collect_full_report_info_for_resistance_mutation(tbprofiler_resistance_mutat
                 tbprofiler_resistance_mutation_record['position'] = full_report_variant.get('pos', None)
                 tbprofiler_resistance_mutation_record['ref_allele'] = full_report_variant.get('ref', None)
                 tbprofiler_resistance_mutation_record['alt_allele'] = full_report_variant.get('alt', None)
-                tbprofiler_resistance_mutation_record['depth'] = full_report_variant.get('depth', None)
+                tbprofiler_resistance_mutation_record['depth_coverage'] = full_report_variant.get('depth', None)
                 tbprofiler_resistance_mutation_record['alt_freq'] = full_report_variant.get('freq', None)
                 tbprofiler_resistance_mutation_record['tbprofiler_filter'] = full_report_variant.get('filter', None)
                 tbprofiler_resistance_mutation_record['mutation_type'] = full_report_variant.get('type', None)
@@ -529,7 +529,7 @@ def format_full_report_info_for_other_variant(tbprofiler_full_report_other_varia
         formatted_variant['position'] = tbprofiler_full_report_other_variant.get('pos', None)
         formatted_variant['ref_allele'] = tbprofiler_full_report_other_variant.get('ref', None)
         formatted_variant['alt_allele'] = tbprofiler_full_report_other_variant.get('alt', None)
-        formatted_variant['depth'] = tbprofiler_full_report_other_variant.get('depth', None)
+        formatted_variant['depth_coverage'] = tbprofiler_full_report_other_variant.get('depth', None)
         formatted_variant['alt_freq'] = tbprofiler_full_report_other_variant.get('freq', None)
         formatted_variant['tbprofiler_filter'] = tbprofiler_full_report_other_variant.get('filter', None)
         formatted_variant['mutation_type'] = tbprofiler_full_report_other_variant.get('type', None)
@@ -553,7 +553,7 @@ def parse_adjusted_resistance_mutations(input_file: Path) -> dict:
     ]
 
     float_fields = [
-        'depth',
+        'depth_coverage',
         'alt_freq',
         'catalogue_ppv_solo_estimate',
         'catalogue_ppv_solo_lower_bound',
@@ -667,7 +667,7 @@ def main(args):
         'position',
         'ref_allele',
         'alt_allele',
-        'depth',
+        'depth_coverage',
         'alt_freq',
         'tbprofiler_filter',
         'catalogue_dataset',
@@ -716,12 +716,14 @@ def main(args):
     adjusted_resistance_prediction_output_fieldnames = [
         'sample_id',
         'drug',
-        'num_putative_drug_related_mutations_detected',
-        'sum_all_mutation_ppvs',
-        'combined_all_mutation_ppvs',
+        'total_num_putative_drug_related_mutations_detected',
+        'total_num_putative_drug_related_mutations_with_ppv_values',
+        'sum_all_putative_drug_related_mutation_ppvs',
+        'combined_all_putative_drug_related_mutation_ppvs',
         'num_tbprofiler_resistance_mutations_detected',
-        'sum_resistance_ppvs',
-        'combined_resistance_mutation_ppvs',
+        'num_tbprofiler_resistance_mutations_with_ppv_values',
+        'sum_tbprofiler_resistance_mutation_ppvs',
+        'combined_tbprofiler_resistance_mutation_ppvs',
         'ppv_threshold',
         'tbprofiler_resistance_prediction',
         'adjusted_resistance_prediction',
@@ -730,8 +732,10 @@ def main(args):
     ]
 
     rounded_fields = [
-        'sum_all_mutation_ppvs',
-        'combined_all_mutation_ppvs',
+        'sum_all_putative_drug_related_mutation_ppvs',
+        'combined_all_putative_drug_related_mutation_ppvs',
+        'sum_tbprofiler_resistance_mutation_ppvs',
+        'combined_tbprofiler_resistance_mutation_ppvs',
     ]
 
     adjusted_resistance_prediction_output = []
@@ -740,16 +744,26 @@ def main(args):
         ppv_threshold = args.global_ppv_threshold
         if drug in drug_ppv_thresholds:
             ppv_threshold = drug_ppv_thresholds[drug]
+
         resistance_and_other_mutations = adjusted_resistance_and_other_mutations_by_drug.get(drug, [])
-        total_num_mutations_for_drug = len(resistance_and_other_mutations)
         all_ppvs = []
         resistance_ppvs = []
+        num_mutations_total = 0
+        num_mutations_with_ppv_values = 0
+        num_resistance_mutations_total = 0
+        num_resistance_mutations_with_ppv_values = 0
         for mutation in resistance_and_other_mutations:
+            num_mutations_total += 1
+            if mutation['tbprofiler_variant_type'] == 'resistance':
+                num_resistance_mutations_total += 1
             if 'catalogue_ppv_solo_estimate' in mutation:
                 ppv = mutation['catalogue_ppv_solo_estimate']
                 if ppv is not None:
+                    num_mutations_with_ppv_values += 1
                     all_ppvs.append(ppv)
                     if mutation['tbprofiler_variant_type'] == 'resistance':
+                        num_resistance_mutations_total += 1
+                        num_resistance_mutations_with_ppv_values += 1
                         resistance_ppvs.append(ppv)
 
         num_mutations_with_ppv_values = len(all_ppvs)
@@ -762,12 +776,14 @@ def main(args):
         output_row = {
             'sample_id': args.sample_id,
             'drug': drug,
-            'num_putative_drug_related_mutations_detected': total_num_mutations_for_drug,
-            'sum_all_mutation_ppvs': sum_all_ppv,
-            'combined_all_mutation_ppvs': combined_all_ppv,
-            'num_tbprofiler_resistance_mutations_detected': num_resistance_mutations_with_ppv_values,
-            'sum_resistance_ppvs': sum_resistance_ppv,
-            'combined_resistance_mutation_ppvs': combined_resistance_ppv,
+            'total_num_putative_drug_related_mutations_detected': num_mutations_total,
+            'total_num_putative_drug_related_mutations_with_ppv_values': num_mutations_with_ppv_values,
+            'sum_all_putative_drug_related_mutation_ppvs': sum_all_ppv,
+            'combined_all_putative_drug_related_mutation_ppvs': combined_all_ppv,
+            'num_tbprofiler_resistance_mutations_detected': num_resistance_mutations_total,
+            'num_tbprofiler_resistance_mutations_with_ppv_values': num_resistance_mutations_with_ppv_values,
+            'sum_tbprofiler_resistance_mutation_ppvs': sum_resistance_ppv,
+            'combined_tbprofiler_resistance_mutation_ppvs': combined_resistance_ppv,
             'ppv_threshold': ppv_threshold,
             'tbprofiler_resistance_prediction': tbprofiler_resistance_prediction,
             'tbprofiler_version': tbprofiler_version,
