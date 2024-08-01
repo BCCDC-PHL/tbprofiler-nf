@@ -425,9 +425,9 @@ def collect_catalogue_info_for_mutation(tbprofiler_resistance_mutation_record, i
 
     mutation_catalogue_record = indexed_catalogue[drug][gene][mutation]
     catalogue_dataset = "all"
-    tbprofiler_resistance_mutation_record['catalogue_ppv_estimate'] = mutation_catalogue_record.get('ppv_dataset_all', None)
-    tbprofiler_resistance_mutation_record['catalogue_ppv_lower_bound'] = mutation_catalogue_record.get('ppv_lb_dataset_all', None)
-    tbprofiler_resistance_mutation_record['catalogue_ppv_upper_bound'] = mutation_catalogue_record.get('ppv_ub_dataset_all', None)
+    tbprofiler_resistance_mutation_record['catalogue_ppv_solo_estimate'] = mutation_catalogue_record.get('ppv_dataset_all', None)
+    tbprofiler_resistance_mutation_record['catalogue_ppv_solo_lower_bound'] = mutation_catalogue_record.get('ppv_lb_dataset_all', None)
+    tbprofiler_resistance_mutation_record['catalogue_ppv_solo_upper_bound'] = mutation_catalogue_record.get('ppv_ub_dataset_all', None)
     tbprofiler_resistance_mutation_record['catalogue_dataset'] = catalogue_dataset
     tbprofiler_resistance_mutation_record['catalogue_final_confidence_grading'] = mutation_catalogue_record.get('final_confidence_grading', {}).get('category', None)
 
@@ -478,6 +478,7 @@ def collect_full_report_info_for_resistance_mutation(tbprofiler_resistance_mutat
                 tbprofiler_resistance_mutation_record['mutation_type'] = full_report_variant.get('type', None)
                 tbprofiler_resistance_mutation_record['tbprofiler_confidence'] = annotation.get('confidence', None)
                 tbprofiler_resistance_mutation_record['tbprofiler_source'] = annotation.get('source', None)
+                tbprofiler_resistance_mutation_record['tbprofiler_comment'] = annotation.get('comment', None)
                 break
 
     return tbprofiler_resistance_mutation_record
@@ -501,10 +502,12 @@ def format_full_report_info_for_other_variant(tbprofiler_full_report_other_varia
                 drugs.append(drug)
                 confidence = annotation.get('confidence', None)
                 source = annotation.get('source', None)
+                comment = annotation.get('comment', None)
                 formatted_variant_by_drug[drug] = {
                     'drug': drug,
                     'tbprofiler_confidence': confidence,
                     'tbprofiler_source': source,
+                    'tbprofiler_comment': comment,
                 }
 
     if len(drugs) == 0:
@@ -617,21 +620,22 @@ def main(args):
         'depth',
         'alt_freq',
         'tbprofiler_filter',
-        'catalogue_ppv_estimate',
-        'catalogue_ppv_lower_bound',
-        'catalogue_ppv_upper_bound',
-        'catalogue_dataset',
+        'catalogue_ppv_solo_estimate',
+        'catalogue_ppv_solo_lower_bound',
+        'catalogue_ppv_solo_upper_bound',
         'catalogue_final_confidence_grading',
+        'catalogue_dataset',
         'tbprofiler_confidence',
         'tbprofiler_source',
+        'tbprofiler_comment',
     ]
 
     rounded_fields = [
         'alt_freq',
         'estimated_fraction',
-        'catalogue_ppv_estimate',
-        'catalogue_ppv_lower_bound',
-        'catalogue_ppv_upper_bound',
+        'catalogue_ppv_solo_estimate',
+        'catalogue_ppv_solo_lower_bound',
+        'catalogue_ppv_solo_upper_bound',
     ]
     with open(args.output_adjusted_resistance_mutations, 'w') as f:
         writer = csv.DictWriter(f, fieldnames=adjusted_resistance_mutation_output_fieldnames, extrasaction='ignore')
