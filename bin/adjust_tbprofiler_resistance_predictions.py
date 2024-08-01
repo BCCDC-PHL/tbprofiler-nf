@@ -38,7 +38,11 @@ def parse_tbprofiler_resistance_predictions(input_file: Path) -> dict:
     with open(input_file, 'r') as f:
         reader = csv.DictReader(f)
         for row in reader:
-            drug = row['drug']
+            drug = row['drug'].lower()
+            if row['genotypic_resistance'] == 'R':
+                row['tbprofiler_resistance_prediction'] = 'Predicted Resistant'
+            elif row['genotypic_resistance'] == '':
+                row['tbprofiler_resistance_prediction'] = 'Predicted Sensitive'
             if drug not in tbprofiler_resistance_prediction_by_drug:
                 tbprofiler_resistance_prediction_by_drug[drug] = row
 
@@ -377,7 +381,7 @@ def parse_drug_ppv_thresholds(input_file: Path) -> dict:
     return drug_ppv_thresholds
 
 
-def combined_resistance_probability(mutations):
+def combine_resistance_probabilities(ppvs):
     """
     Calculate the combined resistance probability given a list of PPVs
 
@@ -387,13 +391,14 @@ def combined_resistance_probability(mutations):
     :rtype: float
     """
 
-    combined_prob = 1
-    for mutation in mutations:
-        if 'ppv' not in mutation:
-            continue
-        ppv = mutation['ppv']
-        combined_prob *= (1 - ppv)
-    combined_prob = 1 - combined_prob
+    combined_prob = 0
+    for ppv in ppvs:
+        if ppv is not None and ppv > 0.0:
+            if combined_prob == 0:
+                combined_prob = 1
+            combined_prob *= (1 - ppv)
+    if combined_prob > 0:
+        combined_prob = 1 - combined_prob
 
     return combined_prob
 
@@ -479,6 +484,7 @@ def collect_full_report_info_for_resistance_mutation(tbprofiler_resistance_mutat
                 tbprofiler_resistance_mutation_record['tbprofiler_confidence'] = annotation.get('confidence', None)
                 tbprofiler_resistance_mutation_record['tbprofiler_source'] = annotation.get('source', None)
                 tbprofiler_resistance_mutation_record['tbprofiler_comment'] = annotation.get('comment', None)
+                tbprofiler_resistance_mutation_record['tbprofiler_variant_type'] = 'resistance'
                 break
 
     return tbprofiler_resistance_mutation_record
@@ -508,6 +514,7 @@ def format_full_report_info_for_other_variant(tbprofiler_full_report_other_varia
                     'tbprofiler_confidence': confidence,
                     'tbprofiler_source': source,
                     'tbprofiler_comment': comment,
+                    'tbprofiler_variant_type': 'other',
                 }
 
     if len(drugs) == 0:
@@ -530,29 +537,71 @@ def format_full_report_info_for_other_variant(tbprofiler_full_report_other_varia
     return formatted_variant_by_drug
 
 
+def parse_adjusted_resistance_mutations(input_file: Path) -> dict:
+    """
+    Parse the adjusted resistance mutations file
+
+    :param input_file: The input adjusted resistance mutations file (csv)
+    :type input_file: str
+    :return: The parsed adjusted resistance mutations
+    :rtype: dict
+    """
+    adjusted_resistance_mutations_by_drug = {}
+
+    int_fields = [
+        'position',
+    ]
+
+    float_fields = [
+        'depth',
+        'alt_freq',
+        'catalogue_ppv_solo_estimate',
+        'catalogue_ppv_solo_lower_bound',
+        'catalogue_ppv_solo_upper_bound',
+    ]
+
+    with open(input_file, 'r') as f:
+        reader = csv.DictReader(f)
+        for row in reader:
+            for field in int_fields:
+                if row[field] == '':
+                    row[field] = None
+                else:
+                    try:
+                        row[field] = int(row[field])
+                    except ValueError as e:
+                        row[field] = None
+            for field in float_fields:
+                if row[field] == '':
+                    row[field] = None
+                else:
+                    try:
+                        row[field] = float(row[field])
+                    except ValueError as e:
+                        row[field] = None
+
+            drug = row['drug']
+            if drug not in adjusted_resistance_mutations_by_drug:
+                adjusted_resistance_mutations_by_drug[drug] = []
+            adjusted_resistance_mutations_by_drug[drug].append(row)
+
+    return adjusted_resistance_mutations_by_drug
+
+
 def main(args):
 
     log_format = '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
     logging.basicConfig(level=logging.INFO, format=log_format)
 
     mutation_catalogue = parse_mutation_catalogue(args.input_who_mutation_catalogue)
-    # print(json.dumps(mutation_catalogue[0:10], indent=2))
-    # exit()
 
     indexed_catalogue = index_mutation_catalogue_by_mutation_by_gene_by_drug(mutation_catalogue)
 
     tbprofiler_resistance_mutations_by_drug = parse_tbprofiler_resistance_mutations(args.input_tbprofiler_resistance_mutations)
-    
-    # print(json.dumps(tbprofiler_resistance_mutations_by_drug, indent=2))
-    # exit()
 
     tbprofiler_resistance_prediction_by_drug = parse_tbprofiler_resistance_predictions(args.input_tbprofiler_resistance_predictions)
-    # print(json.dumps(tbprofiler_resistance_prediction_by_drug, indent=2))
-    # exit()
 
     tbprofiler_full_report = parse_tbprofiler_full_report(args.input_tbprofiler_full_report)
-    # print(json.dumps(tbprofiler_full_report, indent=2))
-    # exit()
 
     tbprofiler_full_report_resistance_variants = tbprofiler_full_report.get('dr_variants', [])
 
@@ -582,8 +631,6 @@ def main(args):
                     tbprofiler_other_variants_by_drug[drug] = []
                 tbprofiler_other_variants_by_drug[drug].append(variant)
 
-
-    
     drug_ppv_thresholds = {}
     if args.drug_ppv_thresholds:
         drug_ppv_thresholds = parse_drug_ppv_thresholds(args.drug_ppv_thresholds)
@@ -606,7 +653,6 @@ def main(args):
             resistance_mutation_with_full_report_info = collect_full_report_info_for_resistance_mutation(tbprofiler_resistance_mutation, indexed_tbprofiler_full_report_resistance_variants, drug)
             tbprofiler_resistance_mutations[idx] = resistance_mutation_with_full_report_info
 
-
     adjusted_resistance_mutation_output_fieldnames = [
         'sample_id',
         'drug',
@@ -620,11 +666,12 @@ def main(args):
         'depth',
         'alt_freq',
         'tbprofiler_filter',
+        'catalogue_dataset',
         'catalogue_ppv_solo_estimate',
         'catalogue_ppv_solo_lower_bound',
         'catalogue_ppv_solo_upper_bound',
         'catalogue_final_confidence_grading',
-        'catalogue_dataset',
+        'tbprofiler_variant_type',
         'tbprofiler_confidence',
         'tbprofiler_source',
         'tbprofiler_comment',
@@ -655,53 +702,86 @@ def main(args):
                         variant[field] = round(variant[field], 6)
                 variant['sample_id'] = args.sample_id
                 writer.writerow(variant)
-        
-    exit()
-            
+
+    adjusted_resistance_and_other_mutations_by_drug = parse_adjusted_resistance_mutations(args.output_adjusted_resistance_mutations)
+
     adjusted_resistance_prediction_output_fieldnames = [
         'sample_id',
         'drug',
-        'num_putative_resistance_mutations_detected',
-        'num_resistance_mutations_with_established_ppv',
-        'sum_ppv',
-        'combined_ppv',
+        'num_putative_drug_related_mutations_detected',
+        'sum_all_mutation_ppvs',
+        'combined_all_mutation_ppvs',
+        'num_tbprofiler_resistance_mutations_detected',
+        'sum_resistance_ppvs',
+        'combined_resistance_mutation_ppvs',
         'ppv_threshold',
         'tbprofiler_resistance_prediction',
         'adjusted_resistance_prediction',
     ]
 
-    output = []
-    for drug, resistance_mutations in tbprofiler_resistance_mutations_by_drug.items():
-        tbprofiler_resistance_prediction = tbprofiler_resistance_prediction_by_drug.get(drug, {}).get('genotypic_resistance', None)
-        total_resistance_mutations = len(resistance_mutations)
-        num_resistance_mutations_with_ppv_values = len([mutation for mutation in resistance_mutations if 'ppv' in mutation])
+    rounded_fields = [
+        'sum_all_mutation_ppvs',
+        'combined_all_mutation_ppvs',
+    ]
 
-        sum_ppv = 0
-        for mutation in resistance_mutations:
-            if 'ppv' in mutation:
-                sum_ppv += mutation['ppv']
-        combined_ppv = combined_resistance_probability(resistance_mutations)
+    adjusted_resistance_prediction_output = []
+    for drug, tbprofiler_resistance_prediction_record in tbprofiler_resistance_prediction_by_drug.items():
+        tbprofiler_resistance_prediction = tbprofiler_resistance_prediction_record['tbprofiler_resistance_prediction']
+        ppv_threshold = args.global_ppv_threshold
+        if drug in drug_ppv_thresholds:
+            ppv_threshold = drug_ppv_thresholds[drug]
+        resistance_and_other_mutations = adjusted_resistance_and_other_mutations_by_drug.get(drug, [])
+        total_num_mutations_for_drug = len(resistance_and_other_mutations)
+        all_ppvs = []
+        resistance_ppvs = []
+        for mutation in resistance_and_other_mutations:
+            if 'catalogue_ppv_solo_estimate' in mutation:
+                ppv = mutation['catalogue_ppv_solo_estimate']
+                if ppv is not None:
+                    all_ppvs.append(ppv)
+                    if mutation['tbprofiler_variant_type'] == 'resistance':
+                        resistance_ppvs.append(ppv)
+
+        num_mutations_with_ppv_values = len(all_ppvs)
+        num_resistance_mutations_with_ppv_values = len(resistance_ppvs)
+
+        sum_all_ppv = sum(all_ppvs)
+        combined_all_ppv = combine_resistance_probabilities(all_ppvs)
+        sum_resistance_ppv = sum(resistance_ppvs)
+        combined_resistance_ppv = combine_resistance_probabilities(resistance_ppvs)
         output_row = {
+            'sample_id': args.sample_id,
             'drug': drug,
-            'num_putative_resistance_mutations_detected': total_resistance_mutations,
-            'num_resistance_mutations_with_established_ppv': num_resistance_mutations_with_ppv_values,
-            'sum_ppv': round(sum_ppv, 3),
-            'combined_ppv': round(combined_ppv, 3),
-            'ppv_threshold': drug_ppv_thresholds.get(drug, args.global_ppv_threshold),
+            'num_putative_drug_related_mutations_detected': total_num_mutations_for_drug,
+            'sum_all_mutation_ppvs': sum_all_ppv,
+            'combined_all_mutation_ppvs': combined_all_ppv,
+            'num_tbprofiler_resistance_mutations_detected': num_resistance_mutations_with_ppv_values,
+            'sum_resistance_ppvs': sum_resistance_ppv,
+            'combined_resistance_mutation_ppvs': combined_resistance_ppv,
+            'ppv_threshold': ppv_threshold,
             'tbprofiler_resistance_prediction': tbprofiler_resistance_prediction,
         }
-        if output_row['ppv_threshold'] is not None and output_row['combined_ppv'] >= output_row['ppv_threshold']:
-            output_row['adjusted_resistance_prediction'] = 'Predicted to be Resistant'
+        if ppv_threshold is not None:
+            if combined_all_ppv >= ppv_threshold:
+                output_row['adjusted_resistance_prediction'] = 'Predicted Resistant'
+            else:
+                output_row['adjusted_resistance_prediction'] = 'Predicted Sensitive'
         else:
-            output_row['adjusted_resistance_prediction'] = 'Predicted to be Sensitive'
-        output.append(output_row)
+            output_row['adjusted_resistance_prediction'] = 'Prediction Undetermined'
+            
+        adjusted_resistance_prediction_output.append(output_row)
 
 
-    with open(args.output_resistance_predictions, 'w') as f:
-        writer = csv.DictWriter(f, fieldnames=output_fieldnames, extrasaction='ignore')
+    with open(args.output_adjusted_resistance_predictions, 'w') as f:
+        writer = csv.DictWriter(f, fieldnames=adjusted_resistance_prediction_output_fieldnames, extrasaction='ignore')
         writer.writeheader()
-        for row in output:
+        for row in adjusted_resistance_prediction_output:
+            for field in rounded_fields:
+                if field in row and row[field] is not None:
+                    row[field] = round(row[field], 6)
             writer.writerow(row)
+
+
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Adjust the TBProfiler resistance prediction output')
