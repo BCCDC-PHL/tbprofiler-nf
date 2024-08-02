@@ -292,14 +292,14 @@ def parse_mutation_catalogue(catalogue_path):
                         'interim_grading': interim_grading,
                         'associated_with_resistance': associated_with_resistance,
                     }
-                
+
                 parsed_record[cleaned_key] = row[k]
 
             # The 'genomic_position' field is always "(see \"Genomic_coordinates\" sheet)"
             parsed_record.pop('genomic_position', None)
 
             catalogue.append(parsed_record)
-            
+
     return catalogue
 
 
@@ -435,9 +435,6 @@ def collect_catalogue_info_for_mutation(tbprofiler_resistance_mutation_record, i
     tbprofiler_resistance_mutation_record['catalogue_ppv_solo_upper_bound'] = mutation_catalogue_record.get('ppv_ub_dataset_all', None)
     tbprofiler_resistance_mutation_record['catalogue_dataset'] = catalogue_dataset
     tbprofiler_resistance_mutation_record['catalogue_final_confidence_grading'] = mutation_catalogue_record.get('final_confidence_grading', {}).get('category', None)
-
-    #print(json.dumps(tbprofiler_resistance_mutation_record, indent=2))
-    #exit()
 
     return tbprofiler_resistance_mutation_record
 
@@ -586,6 +583,42 @@ def parse_adjusted_resistance_mutations(input_file: Path) -> dict:
             adjusted_resistance_mutations_by_drug[drug].append(row)
 
     return adjusted_resistance_mutations_by_drug
+
+
+def parse_custom_mutation_resistance_prediction_eligibility_criteria(input_file: Path) -> dict:
+    """
+    Parse the custom mutation resistance prediction eligibility criteria file.
+
+    Input file should be a CSV with the following columns:
+    - drug
+    - gene
+    - mutation
+
+    ...along with an arbitrary number of additional columns containing eligibility criteria.
+
+    For each eligibility criterion, the column name should be the criterion name, and the value should indicate
+    whether the mutation meets the criterion (e.g. 'True' or 'False').
+    """
+    custom_mutation_resistance_prediction_eligibility_criteria = {}
+
+    with open(input_file, 'r') as f:
+        reader = csv.DictReader(f)
+        for row in reader:
+            drug = row['drug']
+            if drug not in custom_mutation_resistance_prediction_eligibility_criteria:
+                custom_mutation_resistance_prediction_eligibility_criteria[drug] = {}
+            gene = row['gene']
+            if gene not in custom_mutation_resistance_prediction_eligibility_criteria[drug]:
+                custom_mutation_resistance_prediction_eligibility_criteria[drug][gene] = {}
+            mutation = row['mutation']
+            criteria = {}
+            for key, value in row.items():
+                if key in ['drug', 'gene', 'mutation']:
+                    continue
+                criteria[key] = value
+            custom_mutation_resistance_prediction_eligibility_criteria[drug][gene][mutation] = criteria
+
+    return custom_mutation_resistance_prediction_eligibility_criteria
 
 
 def main(args):
@@ -818,6 +851,7 @@ if __name__ == '__main__':
     parser.add_argument('--input-tbprofiler-resistance-predictions', type=Path, help='The input tbprofiler resistance predictions file (csv)')
     parser.add_argument('--input-tbprofiler-full-report', type=Path, help='The input tbprofiler full report file (json)')
     parser.add_argument('--input-who-mutation-catalogue', type=Path, help='')
+    parser.add_argument('--input-custom-mutation-resistance-prediction-eligibility-criteria', type=Path, help='')
     parser.add_argument('--global-ppv-threshold', type=float, default=0.90, help='The global PPV threshold for resistance prediction')
     parser.add_argument('--drug-ppv-thresholds', type=Path, help='The input drug PPV thresholds file (csv)')
     parser.add_argument('--output-adjusted-resistance-predictions', type=Path, help='The output adjusted tbprofiler resistance prediction file (csv)')
