@@ -463,8 +463,6 @@ def collect_full_report_info_for_resistance_mutation(tbprofiler_resistance_mutat
         return tbprofiler_resistance_mutation_record
 
     full_report_variant = indexed_tbprofiler_full_report_resistance_variants[drug][gene][mutation]
-    # print(json.dumps(full_report_variant, indent=2))
-    # exit()
     
     for annotation in full_report_variant['annotation']:
         if annotation['type'] == 'drug_resistance' or annotation['type'] == 'who_confidence':
@@ -523,6 +521,8 @@ def format_full_report_info_for_other_variant(tbprofiler_full_report_other_varia
         formatted_variant['ref_genome_accession'] = "NC_000962.3"
         formatted_variant['gene'] = tbprofiler_full_report_other_variant.get('gene_name', None)
         formatted_variant['mutation'] = tbprofiler_full_report_other_variant.get('change', None)
+        formatted_variant['nucleotide_change'] = tbprofiler_full_report_other_variant.get('nucleotide_change', None)
+        formatted_variant['protein_change'] = tbprofiler_full_report_other_variant.get('protein_change', None)
         formatted_variant['position'] = tbprofiler_full_report_other_variant.get('pos', None)
         formatted_variant['ref_allele'] = tbprofiler_full_report_other_variant.get('ref', None)
         formatted_variant['alt_allele'] = tbprofiler_full_report_other_variant.get('alt', None)
@@ -605,6 +605,7 @@ def parse_custom_mutation_resistance_prediction_eligibility_criteria(input_file:
         reader = csv.DictReader(f)
         for row in reader:
             drug = row['drug']
+            drug = drug.lower()
             if drug not in custom_mutation_resistance_prediction_eligibility_criteria:
                 custom_mutation_resistance_prediction_eligibility_criteria[drug] = {}
             gene = row['gene']
@@ -621,13 +622,78 @@ def parse_custom_mutation_resistance_prediction_eligibility_criteria(input_file:
     return custom_mutation_resistance_prediction_eligibility_criteria
 
 
+def determine_mutation_resistance_prediction_eligibility(mutation: dict, custom_mutation_resistance_prediction_eligibility_criteria: dict) -> bool:
+    """
+    Determine if a mutation is eligible for resistance prediction based on custom eligibility criteria.
+
+    :param mutation: The mutation
+    :type mutation: dict
+    :param custom_mutation_resistance_prediction_eligibility_criteria: The custom mutation resistance prediction eligibility criteria
+    :type custom_mutation_resistance_prediction_eligibility_criteria: dict
+    :return: Whether the mutation is eligible for resistance prediction
+    """
+    # The input mutation is expected to have the keys: 'drug', 'gene', and 'mutation'
+    # If not, we don't have anything to say about its eligibility.
+
+    eligibility = None
+    drug = mutation.get('drug', None)
+    if drug is None:
+        logging.warning(f"No drug available when checking eligibility for mutation {mutation}")
+        return eligibility
+    gene = mutation.get('gene', None)
+    if gene is None:
+        logging.warning(f"No gene available when checking eligibility for mutation {mutation}")
+        return eligibility
+    mutation_mutation = mutation.get('mutation', None)
+    if mutation_mutation is None:
+        logging.warning(f"No mutation available when checking eligibility for mutation {mutation}")
+        return eligibility
+
+
+    # A mutation must meet at least one criterion to be eligible.
+    # All mutations with tbprofiler_variant_type == 'resistance' are eligible by default,
+    # but may lose eligibility if they fail to meet any other custom criteria
+
+    tbprofiler_variant_type = mutation.get('tbprofiler_variant_type', None)
+    if drug not in custom_mutation_resistance_prediction_eligibility_criteria:
+        if tbprofiler_variant_type == 'resistance':
+            eligibility = True
+        else:
+            eligibility = False
+        return eligibility
+    if gene not in custom_mutation_resistance_prediction_eligibility_criteria[drug]:
+        if tbprofiler_variant_type == 'resistance':
+            eligibility = True
+        else:
+            eligibility = False
+        return eligibility
+    if mutation not in custom_mutation_resistance_prediction_eligibility_criteria[drug][gene]:
+        eligibility = False
+        return eligibility
+    criteria = custom_mutation_resistance_prediction_eligibility_criteria[drug][gene][mutation]
+    
+    for criterion, value in criteria.items():
+        if value.lower() == 'true':
+            eligibility = True
+        elif value.lower() == 'false':
+            eligibility = False
+        else:
+            eligibility = False
+
+    return eligibility
+
+
 def main(args):
 
     log_format = '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
     logging.basicConfig(level=logging.INFO, format=log_format)
 
-    mutation_catalogue = parse_mutation_catalogue(args.input_who_mutation_catalogue)
+    custom_mutation_resistance_prediction_eligibility_criteria = {}
+    if args.input_custom_mutation_resistance_prediction_eligibility_criteria:
+        custom_mutation_resistance_prediction_eligibility_criteria = parse_custom_mutation_resistance_prediction_eligibility_criteria(args.custom_mutation_resistance_prediction_eligibility_criteria)
 
+
+    mutation_catalogue = parse_mutation_catalogue(args.input_who_mutation_catalogue)
     indexed_catalogue = index_mutation_catalogue_by_mutation_by_gene_by_drug(mutation_catalogue)
 
     tbprofiler_resistance_mutations_by_drug = parse_tbprofiler_resistance_mutations(args.input_tbprofiler_resistance_mutations)
@@ -668,6 +734,9 @@ def main(args):
                     tbprofiler_other_variants_by_drug[drug] = []
                 tbprofiler_other_variants_by_drug[drug].append(variant)
 
+    # The user may optionally supply a file containing drug-specific PPV thresholds.
+    # If they don't then a global threshold will be used, as defined by
+    # the '--global-ppv-threshold' argument.
     drug_ppv_thresholds = {}
     if args.drug_ppv_thresholds:
         drug_ppv_thresholds = parse_drug_ppv_thresholds(args.drug_ppv_thresholds)
@@ -683,18 +752,40 @@ def main(args):
 
     for drug, tbprofiler_resistance_mutations in tbprofiler_resistance_mutations_by_drug.items():
         drug = drug.lower()
-        if drug not in indexed_tbprofiler_full_report_resistance_variants:
-            logging.warning(f"Drug {drug} not found in full report resistance variants")
-            continue
         for idx, tbprofiler_resistance_mutation in enumerate(tbprofiler_resistance_mutations):
             resistance_mutation_with_full_report_info = collect_full_report_info_for_resistance_mutation(tbprofiler_resistance_mutation, indexed_tbprofiler_full_report_resistance_variants, drug)
             tbprofiler_resistance_mutations[idx] = resistance_mutation_with_full_report_info
+
+    # For each resistance mutation, determine if it is eligible for resistance prediction.
+    # These mutations are eligible by default, but may lose eligibility if they fail to meet
+    # any custom criteria.
+    for drug, tbprofiler_resistance_mutations in tbprofiler_resistance_mutations_by_drug.items():
+        for tbprofiler_resistance_mutation in tbprofiler_resistance_mutations:
+            mutation_eligibility = determine_mutation_resistance_prediction_eligibility(
+                tbprofiler_resistance_mutation,
+                custom_mutation_resistance_prediction_eligibility_criteria
+            )
+            tbprofiler_resistance_mutation['eligible_for_resistance_prediction'] = mutation_eligibility
+
+    # For each other variant, determine if it is eligible for resistance prediction.
+    # These variants are *not* eligible by default, but may gain eligibility if they meet
+    # all custom criteria.
+    for drug, tbprofiler_other_variants in tbprofiler_other_variants_by_drug.items():
+        for tbprofiler_other_variant in tbprofiler_other_variants:
+            mutation_eligibility = determine_mutation_resistance_prediction_eligibility(
+                tbprofiler_other_variant,
+                custom_mutation_resistance_prediction_eligibility_criteria
+            )
+            tbprofiler_other_variant['eligible_for_resistance_prediction'] = mutation_eligibility
+
 
     adjusted_resistance_mutation_output_fieldnames = [
         'sample_id',
         'drug',
         'gene',
         'mutation',
+        'nucleotide_change',
+        'protein_change',
         'mutation_type',
         'ref_genome_accession',
         'position',
@@ -712,6 +803,7 @@ def main(args):
         'tbprofiler_confidence',
         'tbprofiler_source',
         'tbprofiler_comment',
+        'eligible_for_resistance_prediction',
         'tbprofiler_version',
         'tbdb_commit',
     ]
@@ -743,6 +835,14 @@ def main(args):
                         variant[field] = round(variant[field], 6)
                 variant['sample_id'] = args.sample_id
                 writer.writerow(variant)
+
+
+
+    #
+    # End of mutation-specific processing.
+    # Now that we've saved the detaled mutation information, we can proceed to the resistance prediction step.
+    #
+
 
     adjusted_resistance_and_other_mutations_by_drug = parse_adjusted_resistance_mutations(args.output_adjusted_resistance_mutations)
 
@@ -817,7 +917,6 @@ def main(args):
             'num_tbprofiler_resistance_mutations_with_ppv_values': num_resistance_mutations_with_ppv_values,
             'sum_tbprofiler_resistance_mutation_ppvs': sum_resistance_ppv,
             'combined_tbprofiler_resistance_mutation_ppvs': combined_resistance_ppv,
-            'ppv_threshold': ppv_threshold,
             'tbprofiler_resistance_prediction': tbprofiler_resistance_prediction,
             'tbprofiler_version': tbprofiler_version,
             'tbdb_commit': tbdb_commit,
@@ -852,8 +951,8 @@ if __name__ == '__main__':
     parser.add_argument('--input-tbprofiler-full-report', type=Path, help='The input tbprofiler full report file (json)')
     parser.add_argument('--input-who-mutation-catalogue', type=Path, help='')
     parser.add_argument('--input-custom-mutation-resistance-prediction-eligibility-criteria', type=Path, help='')
-    parser.add_argument('--global-ppv-threshold', type=float, default=0.90, help='The global PPV threshold for resistance prediction')
     parser.add_argument('--drug-ppv-thresholds', type=Path, help='The input drug PPV thresholds file (csv)')
+    parser.add_argument('--global-ppv-threshold', type=float, default=0.90, help='The global PPV threshold')
     parser.add_argument('--output-adjusted-resistance-predictions', type=Path, help='The output adjusted tbprofiler resistance prediction file (csv)')
     parser.add_argument('--output-adjusted-resistance-mutations', type=Path, help='The output adjusted tbprofiler resistance mutations file (csv)')
     args = parser.parse_args()
