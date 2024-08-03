@@ -50,10 +50,15 @@ workflow {
     tbprofiler(fastp.out.reads)
 
     if (params.adjust_tbprofiler_resistance_predictions) {
-	ch_who_mutation_catalogue = Channel.fromPath("${baseDir}/assets/WHO-UCN-TB-2023.6-eng_catalogue_master_file.txt")
 	ch_tbprofiler_outputs = tbprofiler.out.resistance_csv.join(tbprofiler.out.resistance_mutations_csv).join(tbprofiler.out.report_json)
-	adjust_tbprofiler_resistance_predictions(ch_tbprofiler_outputs.combine(ch_who_mutation_catalogue))
+
+	ch_who_mutation_catalogue = Channel.fromPath("${baseDir}/assets/WHO-UCN-TB-2023.6-eng_catalogue_master_file.txt")
+	
+	ch_custom_mutation_resistance_prediction_eligibility_criteria = Channel.fromPath(params.custom_mutation_resistance_prediction_eligibility_criteria)
+	
+	adjust_tbprofiler_resistance_predictions(ch_tbprofiler_outputs.combine(ch_who_mutation_catalogue).combine(ch_custom_mutation_resistance_prediction_eligibility_criteria))
     }
+
 
     if (params.rename_ref) {
 	ch_ref = Channel.fromPath("${baseDir}/assets/NC_000962.3.fa")

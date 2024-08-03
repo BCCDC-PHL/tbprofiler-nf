@@ -129,13 +129,15 @@ process adjust_tbprofiler_resistance_predictions {
     publishDir "${params.outdir}/${sample_id}", mode: 'copy', pattern: "${sample_id}_tbprofiler_resistance_*adjusted.csv"
 
     input:
-    tuple val(sample_id), path(tbprofiler_resistance_csv), path(tbprofiler_resistance_mutations_csv), path(tbprofiler_full_report_json), path(who_mutation_catalogue)
+    tuple val(sample_id), path(tbprofiler_resistance_csv), path(tbprofiler_resistance_mutations_csv), path(tbprofiler_full_report_json), path(who_mutation_catalogue), path(custom_mutation_resistance_prediction_eligibility_criteria)
 
     output:
     tuple val(sample_id), path("${sample_id}_tbprofiler_resistance_adjusted.csv"), emit: adjusted_resistance_csv
     tuple val(sample_id), path("${sample_id}_tbprofiler_resistance_mutations_adjusted.csv"), emit: adjusted_resistance_mutations_csv
 
     script:
+    custom_criteria = ''
+    custom_criteria = custom_mutation_resistance_prediction_eligibility_criteria.toString() == "NO_FILE" ? "" :  "--custom-mutation-resistance-prediction-eligibility-criteria " + custom_mutation_resistance_prediction_eligibility_criteria.toString()
     """
     adjust_tbprofiler_resistance_predictions.py \
 	--sample-id ${sample_id} \
@@ -143,9 +145,10 @@ process adjust_tbprofiler_resistance_predictions {
 	--input-tbprofiler-resistance-predictions ${tbprofiler_resistance_csv} \
 	--input-tbprofiler-full-report ${tbprofiler_full_report_json} \
 	--input-who-mutation-catalogue ${who_mutation_catalogue} \
+	${custom_criteria} \
 	--output-adjusted-resistance-mutations ${sample_id}_tbprofiler_resistance_mutations_adjusted.csv \
 	--output-adjusted-resistance-predictions ${sample_id}_tbprofiler_resistance_adjusted.csv
-	
+    
     """
 }
 
