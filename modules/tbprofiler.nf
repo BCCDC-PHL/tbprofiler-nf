@@ -137,7 +137,7 @@ process adjust_tbprofiler_resistance_predictions {
 
     script:
     custom_criteria = ''
-    custom_criteria = custom_mutation_resistance_prediction_eligibility_criteria.toString() == "NO_FILE" ? "" :  "--custom-mutation-resistance-prediction-eligibility-criteria " + custom_mutation_resistance_prediction_eligibility_criteria.toString()
+    custom_criteria = custom_mutation_resistance_prediction_eligibility_criteria.toString() == "NO_FILE" ? "" :  "--input-custom-mutation-resistance-prediction-eligibility-criteria " + custom_mutation_resistance_prediction_eligibility_criteria.toString()
     """
     adjust_tbprofiler_resistance_predictions.py \
 	--sample-id ${sample_id} \

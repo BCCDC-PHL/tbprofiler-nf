@@ -667,10 +667,10 @@ def determine_mutation_resistance_prediction_eligibility(mutation: dict, custom_
         else:
             eligibility = False
         return eligibility
-    if mutation not in custom_mutation_resistance_prediction_eligibility_criteria[drug][gene]:
+    if mutation_mutation not in custom_mutation_resistance_prediction_eligibility_criteria[drug][gene]:
         eligibility = False
         return eligibility
-    criteria = custom_mutation_resistance_prediction_eligibility_criteria[drug][gene][mutation]
+    criteria = custom_mutation_resistance_prediction_eligibility_criteria[drug][gene][mutation_mutation]
     
     for criterion, value in criteria.items():
         if value.lower() == 'true':
@@ -690,7 +690,7 @@ def main(args):
 
     custom_mutation_resistance_prediction_eligibility_criteria = {}
     if args.input_custom_mutation_resistance_prediction_eligibility_criteria:
-        custom_mutation_resistance_prediction_eligibility_criteria = parse_custom_mutation_resistance_prediction_eligibility_criteria(args.custom_mutation_resistance_prediction_eligibility_criteria)
+        custom_mutation_resistance_prediction_eligibility_criteria = parse_custom_mutation_resistance_prediction_eligibility_criteria(args.input_custom_mutation_resistance_prediction_eligibility_criteria)
 
 
     mutation_catalogue = parse_mutation_catalogue(args.input_who_mutation_catalogue)
