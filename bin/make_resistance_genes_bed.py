@@ -6,19 +6,19 @@ import json
 
 from pathlib import Path
 
-def get_genes_from_tbdb_csv(tbdb_csv: Path) -> list:
+def get_genes_from_tbdb_bed(tbdb_bed: Path) -> list:
     """
-    Get genes from TBDB CSV
+    Get genes from TBDB BED
 
-    :param tbdb_csv: TBDB CSV
+    :param tbdb_bed: TBDB BED
     :return: List of genes
     :rtype: list
     """
     genes = set()
-    with open(tbdb_csv, 'r') as f:
-        reader = csv.DictReader(f)
-        for record in reader:
-            gene_name = record['Gene']
+    with open(tbdb_bed, 'r') as f:
+        for line in f:
+            line_split = line.strip().split('\t')
+            gene_name = line_split[4]
             if gene_name == 'Rv0678':
                 gene_name = 'mmpR5'
             genes.add(gene_name)
@@ -71,7 +71,7 @@ def get_genes_from_tbdb_gff(tbdb_gff: Path, resistance_genes: list[str]) -> list
             
 
 def main(args):
-    resistance_genes = get_genes_from_tbdb_csv(args.tbdb_csv)
+    resistance_genes = get_genes_from_tbdb_bed(args.tbdb_bed)
     gene_positions_by_gene_name = get_genes_from_tbdb_gff(args.tbdb_gff, resistance_genes)
     for gene_name, gene_positions in gene_positions_by_gene_name.items():
         print(f"{args.chrom_name}\t{gene_positions['start']}\t{gene_positions['end']}\t{gene_name}\t0\t{gene_positions['strand']}")
@@ -80,7 +80,7 @@ def main(args):
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Generate BED file of genes from TBDB')
     parser.add_argument('--tbdb-gff', type=Path, help='tbdb genome.gff file', required=True)
-    parser.add_argument('--tbdb-csv', type=Path, help='tbdb tbdb.csv file', required=True)
+    parser.add_argument('--tbdb-bed', type=Path, help='tbdb tbdb.bed file', required=True)
     parser.add_argument('--chrom-name', type=str, default='NC_000962.3', help='Chromosome name')
     args = parser.parse_args()
     main(args)
