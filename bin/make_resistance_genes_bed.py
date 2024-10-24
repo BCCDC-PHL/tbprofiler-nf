@@ -24,6 +24,7 @@ def get_gene_info_from_tbdb(tbdb_bed: Path, tbdb_gff: Path) -> list:
             res_gene_name = line_split[4]
             start_pos = int(line_split[1]) - 1 #tbdb.bed 1 indexed, subtract 1 for 0 based index
             end_pos = int(line_split[2])
+            drug_resistance = line_split[5]
             if res_gene_name == 'Rv0678':
                 res_gene_name = 'mmpR5'
 
@@ -47,6 +48,7 @@ def get_gene_info_from_tbdb(tbdb_bed: Path, tbdb_gff: Path) -> list:
                                         'start': start_pos,
                                         'end': end_pos,  
                                         'strand': strand,
+                                        'drugs' : drug_resistance,
                                         }
                             elif item.startswith('ID='):
                                 gene_id = item.split('=')[1].split(':')[1]
@@ -55,6 +57,7 @@ def get_gene_info_from_tbdb(tbdb_bed: Path, tbdb_gff: Path) -> list:
                                         'start': start_pos,
                                         'end': end_pos,
                                         'strand': strand,
+                                        'drugs' : drug_resistance,
                                         }
     return genes
             
@@ -62,7 +65,7 @@ def get_gene_info_from_tbdb(tbdb_bed: Path, tbdb_gff: Path) -> list:
 def main(args):
     gene_positions_by_gene_name = get_gene_info_from_tbdb(args.tbdb_bed,args.tbdb_gff)
     for gene_name, gene_positions in gene_positions_by_gene_name.items():
-        print(f"{args.chrom_name}\t{gene_positions['start']}\t{gene_positions['end']}\t{gene_name}\t0\t{gene_positions['strand']}")
+        print(f"{args.chrom_name}\t{gene_positions['start']}\t{gene_positions['end']}\t{gene_name}\t0\t{gene_positions['strand']}\t{gene_positions['drugs']}")
 
 
 if __name__ == '__main__':

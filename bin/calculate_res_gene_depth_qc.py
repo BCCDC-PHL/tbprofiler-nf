@@ -14,7 +14,6 @@ def calculate_mean_depth(gene_positions, depth):
             total_positions += 1
     if total_positions != 0:
         mean_depth = total_depth / total_positions
-
     else:
         mean_depth = 0
 
@@ -30,7 +29,6 @@ def calculate_percent_gene_covered(gene_positions, depth, depth_threshold):
     
     total_positions = gene_positions[1] - gene_positions[0] + 1
 
-    
     if total_positions != 0:
         pct_cov = (covered_positions / total_positions) * 100
     else:
@@ -39,15 +37,16 @@ def calculate_percent_gene_covered(gene_positions, depth, depth_threshold):
     return round(pct_cov, 3)
 
 def main(args):
-    # Read gene positions from the resistance genes bed file
+    # Read gene positions and drug names from the resistance genes bed file
     gene_data = []
     with open(args.bed, 'r') as bed_file:
         for line in bed_file:
             fields = line.strip().split()
             gene_name = fields[3]
-            start_position = int(fields[1]) +1 # add +1 because bed file is 0 indexed and depth file is 1 indexed
-            end_position = int(fields[2]) 
-            gene_data.append((gene_name, (start_position, end_position)))
+            start_position = int(fields[1]) + 1  # add +1 because bed file is 0 indexed and depth file is 1 indexed
+            end_position = int(fields[2])
+            drugs = fields[6].split(',')  # split the drugs column by commas
+            gene_data.append((gene_name, (start_position, end_position), drugs))
 
     # Read depth data from intermediate mpileup tsv file
     depth_at_position = {}
@@ -59,7 +58,7 @@ def main(args):
             
             chrom, pos, ref, depth = line.split('\t')
             
-            #skipping header line 
+            # skipping header line 
             try:
                 position = int(pos)
                 depth = float(depth)
@@ -72,20 +71,21 @@ def main(args):
     output_file = args.output
     with open(output_file, 'w', newline='') as csv_file:
         writer = csv.writer(csv_file)
-        writer.writerow(['gene_name', 'gene_position_start', 'gene_position_end', 'mean_depth_coverage', 'percent_of_gene_covered_above_depth_threshold'])
+        writer.writerow(['drug', 'gene_name', 'gene_position_start', 'gene_position_end', 'mean_depth_coverage', 'percent_of_gene_covered_above_depth_threshold'])
         
-        for gene_name, gene_positions in gene_data:
+        for gene_name, gene_positions, drugs in gene_data:
             mean_depth = calculate_mean_depth(gene_positions, depth_at_position)
             percent_covered = calculate_percent_gene_covered(gene_positions, depth_at_position, args.threshold)
             
-            writer.writerow([gene_name, gene_positions[0], gene_positions[1], mean_depth, percent_covered])
-
+            # Write one row for each drug-gene combination
+            for drug in drugs:
+                writer.writerow([drug, gene_name, gene_positions[0], gene_positions[1], mean_depth, percent_covered])
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Calculate resistance gene coverage qc metrics.')
     parser.add_argument('--bed', required=True, help='Path for resistance genes bed file.')
     parser.add_argument('--depth', required=True, help='Path for tsv file with depth for each position (intermediate mpileup output).')
     parser.add_argument('--threshold', type=float, default=10, help='min_depth threshold (default: 10).')
-    parser.add_argument('--output',  help='Output CSV file name.')
+    parser.add_argument('--output', help='Output CSV file name.')
     args = parser.parse_args()
     main(args)
