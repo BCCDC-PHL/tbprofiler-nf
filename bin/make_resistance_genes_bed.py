@@ -22,7 +22,7 @@ def get_gene_info_from_tbdb(tbdb_bed: Path, tbdb_gff: Path) -> list:
         for line in f:
             line_split = line.strip().split('\t')
             res_gene_name = line_split[4]
-            start_pos = int(line_split[1]) - 1 #tbdb.bed 1 indexed, subtract 1 for 0 based index
+            start_pos = int(line_split[1]) - 1 
             end_pos = int(line_split[2])
             drug_resistance = line_split[5]
             if res_gene_name == 'Rv0678':
