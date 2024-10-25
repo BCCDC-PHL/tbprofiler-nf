@@ -345,12 +345,14 @@ process calculate_gene_coverage {
     tag { sample_id }
     
     publishDir "${params.outdir}/${sample_id}", mode: 'copy', pattern: "${sample_id}_resistance_gene_coverage.csv"
+    publishDir "${params.outdir}/${sample_id}", mode: 'copy', pattern: "${sample_id}_resistance_drug_coverage.csv"
 
     input:
-    tuple val(sample_id), path(depths), path(resistance_genes_bed)
+    tuple val(sample_id), path(depths), path(resistance_genes_bed), path(resistance_csv)
 
     output:
     tuple val(sample_id), path("${sample_id}_resistance_gene_coverage.csv")
+    tuple val(sample_id), path("${sample_id}_resistance_drug_coverage.csv")
 
     script:
     """
@@ -359,5 +361,13 @@ process calculate_gene_coverage {
 	--depth ${depths} \
 	--threshold ${params.min_depth} \
 	--output ${sample_id}_resistance_gene_coverage.csv
+
+    add_gene_coverage_to_res_csv.py \
+    --resistance ${resistance_csv} \
+    --coverage ${sample_id}_resistance_gene_coverage.csv \
+    --threshold ${params.min_gene_coverage} \
+    --output  ${sample_id}_resistance_drug_coverage.csv 
+
+
     """
 }
