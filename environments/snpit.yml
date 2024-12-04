@@ -2,7 +2,6 @@ name: snpit
 channels:
   - conda-forge
   - bioconda
-  - defaults
 dependencies:
   - python
   - cython
