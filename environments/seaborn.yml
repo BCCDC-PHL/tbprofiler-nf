@@ -2,6 +2,5 @@ name: seaborn
 channels:
   - conda-forge
   - bioconda
-  - defaults
 dependencies:
   - seaborn=0.12.2
