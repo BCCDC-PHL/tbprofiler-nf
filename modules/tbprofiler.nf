@@ -39,6 +39,8 @@ process fastp {
 process tbprofiler {
 
     tag { sample_id }
+
+    errorStrategy 'ignore'
     
     publishDir "${params.outdir}/${sample_id}", mode: 'copy', pattern: "${sample_id}_tbprofiler*.{csv,json}"
     publishDir "${params.outdir}/${sample_id}", mode: 'copy', pattern: "${sample_id}_tbprofiler*.{bam,bam.bai,vcf}", enabled: !params.rename_ref
