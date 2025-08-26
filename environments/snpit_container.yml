@@ -1,9 +1,0 @@
-name: snpit-container
-channels:
-  - conda-forge
-  - bioconda
-dependencies:
-  - python
-  - cython
-  - pip
-  - pysam=0.15.2
