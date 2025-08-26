@@ -7,5 +7,6 @@ dependencies:
   - cython
   - pip
   - pysam=0.15.2
+  - git
   - pip:
     - git+https://github.com/philipwfowler/snpit.git
