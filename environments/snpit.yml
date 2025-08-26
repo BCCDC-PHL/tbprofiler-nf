@@ -8,5 +8,4 @@ dependencies:
   - pip
   - pysam=0.15.2
   - pip:
-    - -r snpit_requirements.txt
-    
+    - git+https://github.com/philipwfowler/snpit.git
