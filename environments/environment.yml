@@ -7,3 +7,4 @@ dependencies:
   - fastp=0.23.2
   - tb-profiler=6.3.0
   - qualimap=2.2.2d
+  - libboost=1.85.0
