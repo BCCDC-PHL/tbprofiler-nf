@@ -8,6 +8,7 @@ for env_yaml in environments/*.yml; do
     wave \
 	--conda-file ${env_yaml} \
 	--singularity \
+	--freeze \
 	--await \
 	--output json \
 	| python -m json.tool \
