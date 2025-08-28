@@ -195,8 +195,6 @@ process snpit {
 
     publishDir "${params.outdir}/${sample_id}", mode: 'copy', pattern: "${sample_id}_snpit_unchecked.tsv"
 
-    conda "$baseDir/environments/snpit.yml"
-
     input:
     tuple val(sample_id), path(vcf)
 
@@ -288,8 +286,6 @@ process mpileup {
 process plot_coverage {
     
     tag { sample_id }
-    
-    conda "$baseDir/environments/seaborn.yml"
     
     publishDir "${params.outdir}/${sample_id}", mode: 'copy', pattern: "${sample_id}_coverage_plot.png"
 
