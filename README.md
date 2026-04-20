@@ -105,7 +105,7 @@ In the output directory for each sample, a provenance file will be written with 
         - parameter: --reporting_af
           value: 0.1
         - parameter: --prefix
-          value: 23s629
+          value: SAMPLE-ID
         - parameter: --csv
           value: null
         - parameter: --call_whole_genome
@@ -116,5 +116,5 @@ In the output directory for each sample, a provenance file will be written with 
       tool_version:  1.0.0
       parameters:
         - parameter: --input
-          value: 23s629_tbprofiler_whole_genome.vcf
+          value: SAMPLE-ID_tbprofiler_whole_genome.vcf
 ```

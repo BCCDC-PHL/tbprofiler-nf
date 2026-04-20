@@ -92,7 +92,7 @@ process tbprofiler {
     printf -- "- process_name: tbprofiler\\n"                  >> ${sample_id}_tbprofiler_provenance.yml
     printf -- "  tools:\\n"                                    >> ${sample_id}_tbprofiler_provenance.yml
     printf -- "    - tool_name: tb-profiler\\n"                >> ${sample_id}_tbprofiler_provenance.yml
-    printf -- "      tool_version: \$(tb-profiler profile --version 2>&1 | cut -d ' ' -f 3)\\n" >> ${sample_id}_tbprofiler_provenance.yml
+    printf -- "      tool_version: \$(tb-profiler profile --version | cut -d ' ' -f 3)\\n" >> ${sample_id}_tbprofiler_provenance.yml
     printf -- "      subcommand: profile\\n"                   >> ${sample_id}_tbprofiler_provenance.yml
     printf -- "      parameters:\\n"                           >> ${sample_id}_tbprofiler_provenance.yml
     printf -- "        - parameter: --platform\\n"             >> ${sample_id}_tbprofiler_provenance.yml
@@ -195,8 +195,6 @@ process snpit {
 
     publishDir "${params.outdir}/${sample_id}", mode: 'copy', pattern: "${sample_id}_snpit_unchecked.tsv"
 
-    conda "$baseDir/environments/snpit.yml"
-
     input:
     tuple val(sample_id), path(vcf)
 
@@ -289,8 +287,6 @@ process plot_coverage {
     
     tag { sample_id }
     
-    conda "$baseDir/environments/seaborn.yml"
-    
     publishDir "${params.outdir}/${sample_id}", mode: 'copy', pattern: "${sample_id}_coverage_plot.png"
 
     input:
@@ -345,12 +341,14 @@ process calculate_gene_coverage {
     tag { sample_id }
     
     publishDir "${params.outdir}/${sample_id}", mode: 'copy', pattern: "${sample_id}_resistance_gene_coverage.csv"
+    publishDir "${params.outdir}/${sample_id}", mode: 'copy', pattern: "${sample_id}_resistance_drug_coverage.csv"
 
     input:
-    tuple val(sample_id), path(depths), path(resistance_genes_bed)
+    tuple val(sample_id), path(depths), path(resistance_genes_bed), path(resistance_csv)
 
     output:
     tuple val(sample_id), path("${sample_id}_resistance_gene_coverage.csv")
+    tuple val(sample_id), path("${sample_id}_resistance_drug_coverage.csv")
 
     script:
     """
@@ -359,5 +357,13 @@ process calculate_gene_coverage {
 	--depth ${depths} \
 	--threshold ${params.min_depth} \
 	--output ${sample_id}_resistance_gene_coverage.csv
+
+    add_gene_coverage_to_res_csv.py \
+    --resistance ${resistance_csv} \
+    --coverage ${sample_id}_resistance_gene_coverage.csv \
+    --threshold ${params.min_gene_coverage} \
+    --output  ${sample_id}_resistance_drug_coverage.csv 
+
+
     """
 }

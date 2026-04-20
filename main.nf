@@ -75,7 +75,7 @@ workflow {
 
     generate_low_coverage_bed(ch_depths)
     
-    calculate_gene_coverage(ch_depths.combine(ch_resistance_genes_bed))
+    calculate_gene_coverage(ch_depths.combine(ch_resistance_genes_bed).join(tbprofiler.out.resistance_csv))
 
     if (params.collect_outputs) {
 	fastp.out.csv.map{ it -> it[1] }.collectFile(

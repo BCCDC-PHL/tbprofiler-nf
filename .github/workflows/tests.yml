@@ -12,13 +12,24 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        nextflow_version: ["21.04.3", "23.10.1"]
-    name: Run tests
+        include:
+          - nextflow_version: "21.04.3"
+            java_version: "8"
+            profile: "conda"
+          - nextflow_version: "24.10.6"
+            java_version: "17"
+            profile: "conda"
+    name: Nextflow v${{ matrix.nextflow_version }} / ${{ matrix.profile }}
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@master
     - name: Create Artifacts Directory
       run: mkdir artifacts
+    - name: Setup Java
+      uses: actions/setup-java@v4
+      with:
+        distribution: 'temurin'
+        java-version: ${{ matrix.java_version }}
     - name: Install Miniconda
       run: bash .github/scripts/install_conda.sh
     - name: Install Nextflow
@@ -34,6 +45,8 @@ jobs:
     - name: Simulate Reads
       run: bash .github/scripts/simulate_reads.sh
     - name: Run Pipeline
+      env:
+        PROFILE: ${{ matrix.profile }}
       run: bash .github/scripts/run_pipeline.sh
     - name: Create Output Checking Environment
       run: bash .github/scripts/create_output_checking_environment.sh
@@ -46,5 +59,5 @@ jobs:
       uses: actions/upload-artifact@v4
       if: always()
       with:
-        name: artifacts-BCCDC-PHL-tbprofiler-nf-nextflow-v${{ matrix.nextflow_version }}-${{ github.run_id }}.${{ github.run_attempt }}
+        name: artifacts-BCCDC-PHL-tbprofiler-nf-nextflow-v${{ matrix.nextflow_version }}-${{ matrix.profile }}-${{ github.run_id }}.${{ github.run_attempt }}
         path: artifacts
